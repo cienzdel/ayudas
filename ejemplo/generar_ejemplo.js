@@ -7,7 +7,7 @@ const Anexos = require('../rellenar.js');
 (async () => {
   const datos = JSON.parse(fs.readFileSync(path.join(__dirname, 'ejemplo.json'), 'utf8'));
   for (const n of [1, 2, 4]) {
-    const plantilla = fs.readFileSync(path.join(__dirname, '..', 'pdf', `anexo${n}.pdf`));
+    const plantilla = fs.readFileSync(path.join(__dirname, '..', 'pdf', Anexos.PLANTILLAS[n]));
     const { bytes, avisos } = await Anexos.rellenar(n, plantilla, datos);
     fs.writeFileSync(path.join(__dirname, `anexo${n}_ejemplo.pdf`), bytes);
     console.log(`Anexo ${n}: ${bytes.length} bytes`, avisos.length ? avisos : '');

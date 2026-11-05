@@ -107,8 +107,8 @@
   const cachePlantillas = {};
   async function plantilla(n) {
     if (!cachePlantillas[n]) {
-      const r = await fetch(`pdf/anexo${n}.pdf`);
-      if (!r.ok) throw new Error(`No se pudo cargar pdf/anexo${n}.pdf`);
+      const r = await fetch('pdf/' + A.PLANTILLAS[n]);
+      if (!r.ok) throw new Error('No se pudo cargar pdf/' + A.PLANTILLAS[n]);
       cachePlantillas[n] = await r.arrayBuffer();
     }
     return cachePlantillas[n];

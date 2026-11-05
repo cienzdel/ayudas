@@ -12,7 +12,7 @@
 })(typeof self !== 'undefined' ? self : this, function (PDFLib) {
   'use strict';
   const { PDFDocument, StandardFonts, PDFName, TextAlignment,
-    pushGraphicsState, popGraphicsState, rectangle, clip, endPath } = PDFLib;
+ } = PDFLib;
 
   const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
     'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -226,54 +226,46 @@
   }
 
   // ---------- Anexo 4 con tantas filas como facturas ----------
-  // Se rellena la plantilla (anexo4.pdf, de 12 filas) sin las filas y se aplana; después se
-  // recorta en franjas y se apilan: cabecera, una franja de fila por factura y la parte de abajo
-  // (total, datos bancarios, firmas). El pie de página queda siempre en su sitio.
-  // El resultado fluye como una longtable de LaTeX: las filas llenan la página y siguen en la
-  // siguiente (con el logo y la fila de títulos repetidos); detrás van el total y los bloques de
-  // abajo, cada uno entero, saltando de página solo el que no quepa.
-  // Franjas en bp desde arriba, de \filasTabla y las coordenadas de latex/anexo4.tex.
+  // Plantilla: pdf/anexo4_piezas.pdf (latex/anexo4_piezas.tex), con cada franja del impreso sola
+  // en su página y en sus coordenadas de siempre. Se rellenan y aplanan los campos, y se apilan
+  // las franjas como una longtable de LaTeX: las filas llenan la página y siguen en la siguiente
+  // (con el logo, «Anexo 4 (continuación)» y los títulos repetidos); detrás van el total y los
+  // bloques de abajo, cada uno entero, saltando de página solo el que no quepa. El pie, fijo.
+  // Como cada franja está sola en su página, nada queda duplicado ni oculto en el PDF.
+  // p = página de anexo4_piezas.pdf; [a, b] = franja en bp desde arriba (de latex/anexo4.tex).
   const A4 = {
-    cabecera: [0, 359.5],     // hasta el final de la fila de títulos de la tabla
-    titulos: [338.4, 359.5],  // fila de títulos (páginas de continuación)
-    logo: [0, 62],            // logo del Vicerrectorado (páginas de continuación)
-    fila: [397.8, 409.8],     // fila 4 de la plantilla: 12 bp
-    total: [505.8, 520.1],    // TOTAL A PAGAR
-    banco: [520.1, 612],      // datos bancarios e IBAN
-    firmas: [612, 757],       // «Zaragoza, a...» y firmas (no se separan)
-    nota: [757, 790],         // nota de las facturas
-    pie: [800, null],         // pie de página, fijo
-    filaModelo: 4,
+    logo: { p: 0, a: 0, b: 62 },
+    cabecera: { p: 1, a: 62, b: 338.4 },
+    titulos: { p: 2, a: 338.4, b: 359.5 },
+    fila: { p: 3, a: 397.8, b: 409.8 },
+    total: { p: 4, a: 505.8, b: 520.1 },
+    banco: { p: 5, a: 520.1, b: 612 },
+    firmas: { p: 6, a: 612, b: 757 },
+    nota: { p: 7, a: 757, b: 790 },
+    pie: { p: 8, a: 800, b: null },
+    continuacion: { p: 9, a: 62, b: 92 },
     columnas: ['orden', 'proveedor', 'numero', 'fecha', 'conceptofra', 'importe', 'subvencion'],
   };
 
   async function rellenarAnexo4(bytesPlantilla, datos) {
     const { bytes: plano, avisos } = await rellenarFijo(4, bytesPlantilla, datos, { sinFilas: true });
     const plantilla = await PDFDocument.load(bytesPlantilla);
+    if (plantilla.getPageCount() < 10) throw new Error('El Anexo 4 necesita la plantilla por piezas (pdf/anexo4_piezas.pdf).');
     const pag0 = plantilla.getPage(0);
     const W = pag0.getWidth(), H = pag0.getHeight();
     const formP = plantilla.getForm();
     const cols = A4.columnas.map(c => {
-      const f = formP.getTextField(c + A4.filaModelo);
+      const f = formP.getTextField(c + '0');
       const r = f.acroField.getWidgets()[0].getRectangle();
-      return { c, x: r.x, w: r.width, dy: H - (r.y + r.height) - A4.fila[0], h: r.height, align: f.getAlignment() };
+      return { c, x: r.x, w: r.width, dy: H - (r.y + r.height) - A4.fila.a, h: r.height, align: f.getAlignment() };
     });
 
     const origen = await PDFDocument.load(plano);
     const doc = await PDFDocument.create();
     const times = await doc.embedFont(StandardFonts.TimesRoman);
-    // La página aplanada se incrusta una sola vez; cada franja es un recorte suyo desplazado.
-    const entera = await doc.embedPage(origen.getPage(0));
-    const F = {};
-    for (const k of ['cabecera', 'titulos', 'logo', 'fila', 'total', 'banco', 'firmas', 'nota', 'pie']) {
-      const [a, b] = A4[k];
-      F[k] = { a, alto: (b === null ? H : b) - a };
-    }
-    const poner = (pag, fr, yArriba) => {
-      pag.pushOperators(pushGraphicsState(), rectangle(0, H - yArriba - fr.alto, W, fr.alto), clip(), endPath());
-      pag.drawPage(entera, { x: 0, y: fr.a - yArriba });
-      pag.pushOperators(popGraphicsState());
-    };
+    const piezas = await doc.embedPages(origen.getPages());
+    const alto = k => (A4[k].b === null ? H : A4[k].b) - A4[k].a;
+    const poner = (pag, k, yArriba) => pag.drawPage(piezas[A4[k].p], { x: 0, y: A4[k].a - yArriba });
     const celda = (pag, texto, col, yFila) => {
       texto = codificable(times, texto || '');
       if (!texto) return;
@@ -288,37 +280,37 @@
     };
 
     const facturas = ((datos.justificacion || {}).facturas || []).filter(x => Object.values(x).some(Boolean));
-    const limite = A4.pie[0];
+    const limite = A4.pie.a;
     const paginas = [];
     let pag, y;
     const nuevaPagina = (conTitulos) => {
       pag = doc.addPage([W, H]); paginas.push(pag);
-      poner(pag, F.logo, 0);
-      pag.drawText('Anexo 4 (continuación)', { x: 71.7, y: H - (A4.logo[1] + 20), size: 12, font: times });
-      y = A4.logo[1] + 30;
-      if (conTitulos) { poner(pag, F.titulos, y); y += F.titulos.alto; }
+      poner(pag, 'logo', 0); poner(pag, 'continuacion', A4.continuacion.a);
+      y = A4.continuacion.b;
+      if (conTitulos) { poner(pag, 'titulos', y); y += alto('titulos'); }
     };
-    // Primera página: la cabecera completa, con la fila de títulos de la tabla.
+    // Primera página: logo, cabecera y títulos de la tabla, en su sitio.
     pag = doc.addPage([W, H]); paginas.push(pag);
-    poner(pag, F.cabecera, 0); y = A4.cabecera[1];
+    poner(pag, 'logo', 0); poner(pag, 'cabecera', A4.cabecera.a); poner(pag, 'titulos', A4.titulos.a);
+    y = A4.titulos.b;
 
     facturas.forEach((fa, k) => {
-      if (y + F.fila.alto > limite) nuevaPagina(true);
-      poner(pag, F.fila, y);
+      if (y + alto('fila') > limite) nuevaPagina(true);
+      poner(pag, 'fila', y);
       const vals = { orden: String(k + 1), proveedor: fa.proveedor, numero: fa.numero, fecha: fa.fecha,
         conceptofra: fa.concepto, importe: euros(importe(fa.importe)), subvencion: euros(importe(fa.subvencion)) };
       cols.forEach(col => celda(pag, vals[col.c], col, y));
-      y += F.fila.alto;
+      y += alto('fila');
     });
-    if (y + F.total.alto > limite) nuevaPagina(true);
-    poner(pag, F.total, y); y += F.total.alto;
+    if (y + alto('total') > limite) nuevaPagina(true);
+    poner(pag, 'total', y); y += alto('total');
     for (const k of ['banco', 'firmas', 'nota']) {
-      if (y + F[k].alto > limite) nuevaPagina(false);
-      poner(pag, F[k], y); y += F[k].alto;
+      if (y + alto(k) > limite) nuevaPagina(false);
+      poner(pag, k, y); y += alto(k);
     }
 
     paginas.forEach((p, ip) => {
-      poner(p, F.pie, A4.pie[0]);
+      poner(p, 'pie', A4.pie.a);
       if (paginas.length > 1) {
         const t = `Página ${ip + 1} de ${paginas.length}`;
         p.drawText(t, { x: 523 - times.widthOfTextAtSize(t, 9), y: H - 817.2, size: 9, font: times });
@@ -331,5 +323,8 @@
     return { bytes: await doc.save(), avisos };
   }
 
-  return { rellenar, camposAnexo, importe, euros, ibanValido, ibanBonito, limpiarIban, fecha };
+  // Plantilla que necesita cada anexo (en pdf/).
+  const PLANTILLAS = { 1: 'anexo1.pdf', 2: 'anexo2.pdf', 4: 'anexo4_piezas.pdf' };
+
+  return { rellenar, PLANTILLAS, camposAnexo, importe, euros, ibanValido, ibanBonito, limpiarIban, fecha };
 });

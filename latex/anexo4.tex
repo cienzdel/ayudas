@@ -1,6 +1,10 @@
 % !TEX program = pdflatex
 % Anexo 4: Impreso de pagos a Delegaciones de Estudiantes. Réplica rellenable
 % del modelo oficial. anexo4_sumas.tex carga este archivo con \CONCALCULO.
+% anexo4_piezas.tex lo carga con \PIEZAS: cada franja (logo, cabecera, títulos de la tabla,
+% una fila, total, banco, firmas, nota, pie y «continuación») sale sola en su página, en sus
+% coordenadas de siempre. El formulario web las apila para hacer el Anexo 4 con tantas filas
+% como facturas (ver A4 en rellenar.js: las franjas tienen que coincidir).
 \documentclass{article}
 \usepackage{anexos}
 \hypersetup{pdftitle={Anexo 4. Impreso de pagos a Delegaciones de Estudiantes}}
@@ -15,11 +19,21 @@
 % Lista "subvencion1",...,"subvencion12" para la suma.
 \def\listaSubvencion{"subvencion1","subvencion2","subvencion3","subvencion4","subvencion5","subvencion6","subvencion7","subvencion8","subvencion9","subvencion10","subvencion11","subvencion12"}
 
+% Cada pieza es un tikzpicture propio; con \PIEZAS, además, va en su propia página.
+\newcommand\pieza{\ifdefined\PIEZAS\clearpage\fi\par\noindent}
+\newenvironment{capa}{\begin{tikzpicture}[remember picture,overlay,every node/.style={font=\fontsize{12}{14}\selectfont}]}{\end{tikzpicture}}
+\newcommand\cuadriculaFilas[2]{% líneas horizontales y verticales entre y0 e y1
+  \lineaH{72.5}{533}{#1}\lineaH{72.5}{533}{#2}\foreach \x in \colsTabla {\lineaV{\x}{#1}{#2}}}
+
+
 \begin{document}
 \begin{Form}
-\begin{tikzpicture}[remember picture,overlay,every node/.style={font=\fontsize{12}{14}\selectfont}]
-  % Cabecera y pie
+% ---------- logo (0-62) ----------
+\pieza\begin{capa}
   \en{31.5bp}{59.2bp}{\includegraphics[width=156.4bp]{logo_vr.png}}
+\end{capa}
+% ---------- cabecera y datos del perceptor (62-338.4) ----------
+\pieza\begin{capa}
   \tx{71.7}{102.4}{Anexo 4}
   \draw[fill=vrcaja,line width=0.75bp,rounded corners=12bp] ([xshift=292bp,yshift=-63.2bp]current page.north west) rectangle ([xshift=522.4bp,yshift=-135.2bp]current page.north west);
   \begin{scope}[every node/.style={font=\arial\bfseries\fontsize{16}{18}\selectfont,anchor=base,inner sep=0pt}]
@@ -27,8 +41,6 @@
   \node[xshift=409.5bp,yshift=-103.8bp] at (current page.north west) {Pagos a Delegaciones};
   \node[xshift=409.5bp,yshift=-122.8bp] at (current page.north west) {de Estudiantes};
   \end{scope}
-  \tx[\bfseries\fontsize{10}{12}\selectfont]{180.1}{817.2}{VICERRECTORADO DE ESTUDIANTES Y EMPLEO}
-  \avisoNoOficial[831]
 
   % ---------- Datos del perceptor ----------
   \etiquetaRaya{79.4}{166.9}{\textbf{D.}}{392}{nombre}
@@ -46,8 +58,43 @@
   \etiquetaRaya{79.4}{289.9}{\textbf{En concepto de:}}{523}{concepto}
   \etiquetaRaya{79.4}{305.8}{\textbf{Organizado por:}}{523}{organizador}
   \tx{79.4}{321.6}{\textbf{Según las facturas adjuntas}:}
-
-  % ---------- Tabla de facturas ----------
+\end{capa}
+% ---------- tabla de facturas ----------
+\ifdefined\PIEZAS
+  % títulos (338.4-359.5)
+  \pieza\begin{capa}
+  \cuadriculaFilas{338.4}{359.5}
+  \begin{scope}[every node/.style={font=\bfseries\fontsize{9}{11}\selectfont}]
+  \tx{88.8}{347.3}{Nº}  \tx{77.3}{357.6}{ORDEN}
+  \tx{118.3}{352.4}{PROVEEDOR}
+  \tx{194.3}{352.4}{Nº FRA.}
+  \tx{244.3}{352.4}{FECHA}
+  \tx{288.5}{352.4}{CONCEPTO}
+  \tx{394.3}{347.3}{IMPORTE}  \tx{400.8}{357.6}{FRAS}
+  \tx{470.6}{347.3}{IMPORTE}  \tx{446.9}{357.6}{SUBVENCIONADO}
+  \end{scope}
+  \end{capa}
+  % una fila (397.8-409.8), con campos «...0» solo para leer la geometría
+  \pieza\begin{capa}
+  \cuadriculaFilas{397.8}{409.8}
+  \def\ya{397.8}\def\yb{409.8}\def\i{0}
+    \celda[align=1]{orden\i}{72.5}{115}{\ya}{\yb}
+    \celda[align=1]{proveedor\i}{115}{186}{\ya}{\yb}
+    \celda[align=1]{numero\i}{186}{235.5}{\ya}{\yb}
+    \celda[align=1]{fecha\i}{235.5}{285}{\ya}{\yb}
+    \celda{conceptofra\i}{285}{384}{\ya}{\yb}
+    \celda[\fmtImporte]{importe\i}{384}{441}{\ya}{\yb}
+    \celda[\fmtImporte]{subvencion\i}{441}{533}{\ya}{\yb}
+  \end{capa}
+  % total (505.8-520.1)
+  \pieza\begin{capa}
+  \lineaH{72.5}{533}{505.8}\lineaH{72.5}{533}{520.1}
+  \lineaV{72.5}{505.8}{520.1}\lineaV{441}{505.8}{520.1}\lineaV{533}{505.8}{520.1}
+  \tx[\bfseries]{320.2}{517.3}{TOTAL A PAGAR . . .}
+  \celda[\fmtImporte\sumaDe{\listaSubvencion},charsize=10pt]{total}{441}{533}{505.8}{520.1}
+  \end{capa}
+\else
+  \pieza\begin{capa}
   \lineaH{72.5}{533}{338.4}
   \foreach \y in \filasTabla {\lineaH{72.5}{533}{\y}}
   \lineaH{72.5}{533}{520.1}
@@ -75,8 +122,10 @@
   }
   \tx[\bfseries]{320.2}{517.3}{TOTAL A PAGAR . . .}
   \celda[\fmtImporte\sumaDe{\listaSubvencion},charsize=10pt]{total}{441}{533}{505.8}{520.1}
-
-  % ---------- Datos bancarios ----------
+  \end{capa}
+\fi
+% ---------- datos bancarios (520.1-612) ----------
+\pieza\begin{capa}
   \tx{79.4}{543.6}{\textbf{Datos bancarios}:}
   \etiquetaCampo{79.4}{563.4}{\ Titular de la cuenta:}{523}{titular}
   \etiquetaCampo{79.4}{583.2}{\ NIF del titular de la cuenta}{523}{niftitular}
@@ -96,8 +145,9 @@
       \campoCaja[charsize=10pt,align=1]{iban\k}{\fpeval{\xa+0.5}}{593}{\fpeval{\xb-0.5}}{606.3}
     }
   }
-
-  % ---------- Fecha y firmas ----------
+\end{capa}
+% ---------- fecha y firmas (612-757) ----------
+\pieza\begin{capa}
   \tx[\bfseries]{79.4}{631.8}{Zaragoza, a}
   \campo[align=1]{dia}{142}{189}{633}
   \tx[\bfseries]{191.0}{631.8}{de}
@@ -112,10 +162,24 @@
   \tx[\fontsize{11}{13}\selectfont]{100.4}{750.9}{Miguel Ángel Barberán Lahuerta}
   \raya{330}{473}{751}{0.5}
   \campo[align=1,charsize=11pt]{firmante}{330}{473}{751}
+\end{capa}
+% ---------- nota de las facturas (757-790) ----------
+\pieza\begin{capa}
   \begin{scope}[every node/.style={font=\itshape\fontsize{10}{12}\selectfont}]
   \tx{79.4}{773.9}{*Las facturas que justifiquen estas ayudas NUNCA deberán ir a nombre de la Universidad Zaragoza, siempre}
   \tx{79.4}{785.4}{a nombre del colectivo o representante del mismo.}
   \end{scope}
-\end{tikzpicture}
+\end{capa}
+% ---------- pie de página (800-) ----------
+\pieza\begin{capa}
+  \tx[\bfseries\fontsize{10}{12}\selectfont]{180.1}{817.2}{VICERRECTORADO DE ESTUDIANTES Y EMPLEO}
+  \avisoNoOficial[831]
+\end{capa}
+\ifdefined\PIEZAS
+% ---------- «continuación» para las páginas siguientes (62-92) ----------
+\pieza\begin{capa}
+  \tx{71.7}{82}{Anexo 4 (continuación)}
+\end{capa}
+\fi
 \end{Form}
 \end{document}

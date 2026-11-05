@@ -11,17 +11,21 @@ La guía paso a paso del trámite está en https://cienzdel.unizar.es/ayudas-vic
 - `latex/`: réplicas en LaTeX de los modelos oficiales (convocatoria 2025/26), con campos de
   formulario (hyperref). `anexos.sty` tiene las macros comunes; todo va en coordenadas absolutas
   medidas sobre los PDF oficiales (bp, origen arriba a la izquierda).
-  - `anexoN.tex`: sin JavaScript. Es la plantilla que rellena la web.
+  - `anexoN.tex`: sin JavaScript. Los Anexos 1 y 2 son la plantilla que rellena la web.
+  - `anexo4_piezas.tex`: el Anexo 4 con `\PIEZAS`: cada franja (logo, cabecera, títulos de la
+    tabla, una fila, total, banco, firmas, nota, pie y «continuación») sola en su página, en sus
+    coordenadas de siempre. Es la plantilla del Anexo 4 en la web.
   - `anexo2_sumas.tex`, `anexo4_sumas.tex`: el mismo anexo con `\CONCALCULO`, que añade
     JavaScript de Acrobat para formatear importes y sumar el total. **No se deben firmar**:
     el JavaScript hace fallar a AutoFirma.
 - `pdf/`: los PDF compilados (copiar aquí tras compilar).
 - `rellenar.js`: rellena una plantilla con pdf-lib, reparte los textos largos por las líneas,
   encoge la letra si no cabe, aplana y quita `/AcroForm`, `/OpenAction` y `/AA`.
-  El Anexo 4 sale con tantas filas como facturas: se rellena la plantilla sin las filas, se aplana
-  y se recorta en franjas (cabecera, fila, total, banco, firmas, nota, pie; constante `A4`, que replica
-  `\filasTabla` de `latex/anexo4.tex`) que fluyen como una longtable: la tabla sigue en la página siguiente con
-  los títulos repetidos y cada bloque de abajo salta entero de página si no cabe.
+  El Anexo 4 sale con tantas filas como facturas: rellena y aplana `anexo4_piezas.pdf` y apila
+  las piezas (constante `A4`, que tiene que coincidir con las franjas de `latex/anexo4.tex`)
+  como una longtable: la tabla sigue en la página siguiente con los títulos repetidos y cada
+  bloque de abajo salta entero de página si no cabe. Cada pieza se dibuja entera y una sola
+  vez, así que no queda texto oculto ni duplicado en el PDF.
 - `index.html`, `app.js`, `estilo.css`: el formulario.
 - `reparto/`: solo redirige a la herramienta de reparto de gastos, que vive en
   [cienzdel/reparto-gastos-ciencias](https://github.com/cienzdel/reparto-gastos-ciencias)
