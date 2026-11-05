@@ -228,16 +228,21 @@
   // ---------- Anexo 4 con tantas filas como facturas ----------
   // Se rellena la plantilla (anexo4.pdf, de 12 filas) sin las filas y se aplana; después se
   // recorta en franjas y se apilan: cabecera, una franja de fila por factura y la parte de abajo
-  // (total, datos bancarios, firmas). El pie de página queda siempre en su sitio. Si no cabe,
-  // la tabla sigue en otra página con el logo y la fila de títulos repetidos.
-  // Franjas en bp desde arriba, de \filasTabla en latex/anexo4.tex.
+  // (total, datos bancarios, firmas). El pie de página queda siempre en su sitio.
+  // El resultado fluye como una longtable de LaTeX: las filas llenan la página y siguen en la
+  // siguiente (con el logo y la fila de títulos repetidos); detrás van el total y los bloques de
+  // abajo, cada uno entero, saltando de página solo el que no quepa.
+  // Franjas en bp desde arriba, de \filasTabla y las coordenadas de latex/anexo4.tex.
   const A4 = {
     cabecera: [0, 359.5],     // hasta el final de la fila de títulos de la tabla
-    titulos: [338.4, 359.5],  // fila de títulos (para las páginas de continuación)
+    titulos: [338.4, 359.5],  // fila de títulos (páginas de continuación)
     logo: [0, 62],            // logo del Vicerrectorado (páginas de continuación)
     fila: [397.8, 409.8],     // fila 4 de la plantilla: 12 bp
-    abajo: [505.8, 792],      // TOTAL A PAGAR ... nota de las facturas
-    pie: [792, null],         // pie de página
+    total: [505.8, 520.1],    // TOTAL A PAGAR
+    banco: [520.1, 612],      // datos bancarios e IBAN
+    firmas: [612, 757],       // «Zaragoza, a...» y firmas (no se separan)
+    nota: [757, 790],         // nota de las facturas
+    pie: [800, null],         // pie de página, fijo
     filaModelo: 4,
     columnas: ['orden', 'proveedor', 'numero', 'fecha', 'conceptofra', 'importe', 'subvencion'],
   };
@@ -260,7 +265,7 @@
     // La página aplanada se incrusta una sola vez; cada franja es un recorte suyo desplazado.
     const entera = await doc.embedPage(origen.getPage(0));
     const F = {};
-    for (const k of ['cabecera', 'titulos', 'logo', 'fila', 'abajo', 'pie']) {
+    for (const k of ['cabecera', 'titulos', 'logo', 'fila', 'total', 'banco', 'firmas', 'nota', 'pie']) {
       const [a, b] = A4[k];
       F[k] = { a, alto: (b === null ? H : b) - a };
     }
@@ -269,23 +274,6 @@
       pag.drawPage(entera, { x: 0, y: fr.a - yArriba });
       pag.pushOperators(popGraphicsState());
     };
-
-    const facturas = ((datos.justificacion || {}).facturas || []).filter(x => Object.values(x).some(Boolean));
-    const limite = A4.pie[0];
-    const inicioCont = A4.logo[1] + 30;  // logo + título «continuación»
-    const capacidad = (inicio, ultima) => Math.floor((limite - inicio - (ultima ? F.abajo.alto : 0)) / F.fila.alto);
-
-    // Reparto de filas por página
-    const paginas = [];
-    let quedan = facturas.length, inicio = A4.cabecera[1] + 0;
-    for (;;) {
-      const enUltima = capacidad(inicio, true);
-      if (quedan <= enUltima) { paginas.push(quedan); break; }
-      const n = Math.max(0, Math.min(capacidad(inicio, false), quedan - 1));
-      paginas.push(n); quedan -= n;
-      inicio = inicioCont + F.titulos.alto;
-    }
-
     const celda = (pag, texto, col, yFila) => {
       texto = codificable(times, texto || '');
       if (!texto) return;
@@ -299,29 +287,41 @@
       pag.drawText(texto, { x, y: H - base, size: tam, font: times });
     };
 
-    let k = 0;
-    paginas.forEach((nFilas, ip) => {
-      const pag = doc.addPage([W, H]);
-      let y;
-      if (ip === 0) { poner(pag, F.cabecera, 0); y = A4.cabecera[1]; }
-      else {
-        poner(pag, F.logo, 0);
-        pag.drawText('Anexo 4 (continuación). Facturas adjuntas:', { x: 79.4, y: H - (A4.logo[1] + 20), size: 12, font: times });
-        poner(pag, F.titulos, inicioCont); y = inicioCont + F.titulos.alto;
-      }
-      for (let i = 0; i < nFilas; i++, k++) {
-        poner(pag, F.fila, y);
-        const fa = facturas[k];
-        const vals = { orden: String(k + 1), proveedor: fa.proveedor, numero: fa.numero, fecha: fa.fecha,
-          conceptofra: fa.concepto, importe: euros(importe(fa.importe)), subvencion: euros(importe(fa.subvencion)) };
-        cols.forEach(col => celda(pag, vals[col.c], col, y));
-        y += F.fila.alto;
-      }
-      if (ip === paginas.length - 1) poner(pag, F.abajo, y);
-      poner(pag, F.pie, A4.pie[0]);
+    const facturas = ((datos.justificacion || {}).facturas || []).filter(x => Object.values(x).some(Boolean));
+    const limite = A4.pie[0];
+    const paginas = [];
+    let pag, y;
+    const nuevaPagina = (conTitulos) => {
+      pag = doc.addPage([W, H]); paginas.push(pag);
+      poner(pag, F.logo, 0);
+      pag.drawText('Anexo 4 (continuación)', { x: 71.7, y: H - (A4.logo[1] + 20), size: 12, font: times });
+      y = A4.logo[1] + 30;
+      if (conTitulos) { poner(pag, F.titulos, y); y += F.titulos.alto; }
+    };
+    // Primera página: la cabecera completa, con la fila de títulos de la tabla.
+    pag = doc.addPage([W, H]); paginas.push(pag);
+    poner(pag, F.cabecera, 0); y = A4.cabecera[1];
+
+    facturas.forEach((fa, k) => {
+      if (y + F.fila.alto > limite) nuevaPagina(true);
+      poner(pag, F.fila, y);
+      const vals = { orden: String(k + 1), proveedor: fa.proveedor, numero: fa.numero, fecha: fa.fecha,
+        conceptofra: fa.concepto, importe: euros(importe(fa.importe)), subvencion: euros(importe(fa.subvencion)) };
+      cols.forEach(col => celda(pag, vals[col.c], col, y));
+      y += F.fila.alto;
+    });
+    if (y + F.total.alto > limite) nuevaPagina(true);
+    poner(pag, F.total, y); y += F.total.alto;
+    for (const k of ['banco', 'firmas', 'nota']) {
+      if (y + F[k].alto > limite) nuevaPagina(false);
+      poner(pag, F[k], y); y += F[k].alto;
+    }
+
+    paginas.forEach((p, ip) => {
+      poner(p, F.pie, A4.pie[0]);
       if (paginas.length > 1) {
         const t = `Página ${ip + 1} de ${paginas.length}`;
-        pag.drawText(t, { x: 523 - times.widthOfTextAtSize(t, 9), y: H - 803, size: 9, font: times });
+        p.drawText(t, { x: 523 - times.widthOfTextAtSize(t, 9), y: H - 817.2, size: 9, font: times });
       }
     });
 
