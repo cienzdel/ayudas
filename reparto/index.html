@@ -4,22 +4,92 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reparto de gastos · Consejo de Estudiantes de Ciencias</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<script>
+(function () {
+  try {
+    var saved = localStorage.getItem("reparto_gastos_theme");
+    var theme = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  } catch (e) {}
+})();
+</script>
 <style>
 /* ── Reset & base ───────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
+  color-scheme: light;
   --navy: #1b2a5c;
+  --navy-fg: #1b2a5c;
   --navy-light: #2f4a94;
   --navy-tint: #eaedf7;
   --red: #e2231a;
   --red-tint: #fdeceb;
+  --success: #1e8449;
+  --success-fg: #1a6b38;
+  --success-tint: #d5f5e3;
+  --success-border: #b7e8ca;
+  --warning: #b85c00;
+  --warning-tint: #fff3e0;
+  --danger: #c0392b;
+  --danger-tint: #fde8e8;
+  --danger-border: #f5b7b1;
+
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-alt: #f9fafc;
+  --surface-2: #f0f2f8;
+  --border: #dde1e9;
+  --border-strong: #b0b8cc;
+  --track: #eeeeee;
+  --text: #1a1a2e;
+  --text-secondary: #555555;
+  --text-faint: #888888;
+  --shadow-sm: rgba(15, 20, 40, .05);
+  --overlay: rgba(20, 24, 40, .45);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --navy-fg: #93a8f0;
+  --navy-light: #5776d6;
+  --navy-tint: rgba(124, 147, 232, .16);
+  --red-tint: rgba(255, 84, 73, .14);
+  --success: #37c47c;
+  --success-fg: #7fe3ac;
+  --success-tint: rgba(55, 196, 124, .16);
+  --success-border: rgba(55, 196, 124, .35);
+  --warning: #e0954a;
+  --warning-tint: rgba(224, 149, 74, .16);
+  --danger: #ff6f61;
+  --danger-tint: rgba(255, 111, 97, .14);
+  --danger-border: rgba(255, 111, 97, .38);
+
+  --bg: #11162a;
+  --surface: #1a2038;
+  --surface-alt: #212a47;
+  --surface-2: #232c4c;
+  --border: #2d3559;
+  --border-strong: #3d4870;
+  --track: #2b3355;
+  --text: #e7e9f4;
+  --text-secondary: #aab2d1;
+  --text-faint: #7d86ac;
+  --shadow-sm: rgba(0, 0, 0, .35);
+  --overlay: rgba(4, 6, 14, .65);
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 body {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 15px;
-  background: #f5f6f8;
-  color: #1a1a2e;
+  background: var(--bg);
+  color: var(--text);
   min-height: 100vh;
+  transition: background 180ms var(--ease-out), color 180ms var(--ease-out);
 }
 h1, h2, h3 { font-weight: 700; }
 button { cursor: pointer; }
@@ -29,45 +99,47 @@ button { cursor: pointer; }
 header {
   display: flex; align-items: center; gap: 1rem;
   margin-bottom: 1.5rem; padding-bottom: 1rem;
-  border-bottom: 2px solid #d0d3dc;
+  border-bottom: 2px solid var(--border);
 }
-header h1 { font-size: 1.4rem; color: var(--navy); }
-header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
-.intro { margin: 0 0 1rem; font-size: .92rem; color: #444; max-width: 70ch; }
-.logo-mark {
-  width: 42px; height: 42px;
-  position: relative;
+header h1 { font-size: 1.4rem; color: var(--navy-fg); }
+header .subtitle { font-size: .85rem; color: var(--text-secondary); margin-top: .15rem; }
+.logo-mark { height: 42px; width: auto; flex-shrink: 0; }
+.logo-oscuro { display: none; }
+:root[data-theme="dark"] .logo-claro { display: none; }
+:root[data-theme="dark"] .logo-oscuro { display: inline; }
+.header-text { flex: 1; min-width: 0; }
+.header-actions { display: flex; align-items: center; gap: .5rem; flex-shrink: 0; }
+
+/* ── Icon buttons (info, theme toggle) ─────────────────────── */
+.icon-btn {
   flex-shrink: 0;
-}
-.logo-mark::before {
-  content: "";
-  position: absolute; inset: 0;
-  border: 6px solid var(--red);
+  width: 2.1rem; height: 2.1rem;
   border-radius: 50%;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  transform: rotate(-45deg);
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--navy-fg);
+  font-size: 1rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 130ms var(--ease-out), background 130ms var(--ease-out), border-color 130ms var(--ease-out);
 }
-.logo-mark::after {
-  content: "";
-  position: absolute; bottom: 1px; right: 1px;
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--navy);
-}
+.icon-btn:hover { background: var(--navy-tint); border-color: var(--navy-light); }
+.icon-btn:active { transform: scale(0.93); }
+.info-btn { font-style: italic; font-family: Georgia, "Times New Roman", serif; }
+.theme-toggle-btn { font-size: 1.05rem; }
 
 /* ── Sections ───────────────────────────────────────────── */
 .section {
-  background: #fff;
-  border: 1px solid #dde1e9;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 1.25rem 1.4rem;
   margin-bottom: 1.2rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  box-shadow: 0 1px 4px var(--shadow-sm);
+  transition: background 180ms var(--ease-out), border-color 180ms var(--ease-out);
 }
 .section-title {
   font-size: 1rem; font-weight: 700;
-  color: var(--navy);
+  color: var(--navy-fg);
   margin-bottom: 1rem;
   display: flex; align-items: center; gap: .5rem;
 }
@@ -78,14 +150,14 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
   display: flex; align-items: center; gap: .5rem;
   margin-bottom: 1rem; flex-wrap: wrap;
 }
-.split-mode-bar label { font-size: .85rem; font-weight: 600; color: #555; margin-right: .25rem; }
+.split-mode-bar label { font-size: .85rem; font-weight: 600; color: var(--text-secondary); margin-right: .25rem; }
 .mode-btn {
   padding: .3rem .75rem;
-  border: 1.5px solid #b0b8cc;
+  border: 1.5px solid var(--border-strong);
   border-radius: 20px;
-  background: #fff;
+  background: var(--surface);
   font-size: .82rem;
-  color: #444;
+  color: var(--text-secondary);
   transition: all .15s;
 }
 .mode-btn.active {
@@ -101,30 +173,31 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
 #payers-table th {
   text-align: left;
   font-size: .8rem; font-weight: 700; text-transform: uppercase;
-  color: #666; padding: .4rem .5rem;
-  border-bottom: 1.5px solid #dde1e9;
+  color: var(--text-secondary); padding: .4rem .5rem;
+  border-bottom: 1.5px solid var(--border);
 }
 #payers-table td { padding: .4rem .4rem; vertical-align: middle; }
 .payer-name-input {
   width: 100%;
-  border: 1px solid #d0d5e0;
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: .35rem .6rem;
   font-size: .92rem;
-  color: #1a1a2e;
-  background: #f9fafc;
+  color: var(--text);
+  background: var(--surface-alt);
 }
-.payer-name-input:focus { outline: none; border-color: var(--navy-light); background: #fff; }
+.payer-name-input:focus { outline: none; border-color: var(--navy-light); background: var(--surface); }
 .payer-share-input {
   width: 7rem;
-  border: 1px solid #d0d5e0;
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: .35rem .6rem;
   font-size: .92rem;
   text-align: right;
-  background: #f9fafc;
+  color: var(--text);
+  background: var(--surface-alt);
 }
-.payer-share-input:focus { outline: none; border-color: var(--navy-light); background: #fff; }
+.payer-share-input:focus { outline: none; border-color: var(--navy-light); background: var(--surface); }
 .pct-badge {
   display: inline-block;
   min-width: 3.5rem; text-align: center;
@@ -132,10 +205,10 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
   padding: .2rem .5rem;
   border-radius: 12px;
   background: var(--navy-tint);
-  color: var(--navy);
+  color: var(--navy-fg);
 }
-.pct-badge.warn { background: #fff3e0; color: #b85c00; }
-.pct-badge.error { background: #fde8e8; color: #c0392b; }
+.pct-badge.warn { background: var(--warning-tint); color: var(--warning); }
+.pct-badge.error { background: var(--danger-tint); color: var(--danger); }
 .color-dot {
   width: 12px; height: 12px;
   border-radius: 50%;
@@ -146,11 +219,11 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
 /* ── Btn small ──────────────────────────────────────────── */
 .btn-icon {
   background: none; border: none;
-  color: #888; font-size: 1rem;
+  color: var(--text-faint); font-size: 1rem;
   padding: .2rem .35rem; border-radius: 5px;
   transition: color .15s, background .15s;
 }
-.btn-icon:hover { color: #c0392b; background: #fde8e8; }
+.btn-icon:hover { color: var(--danger); background: var(--danger-tint); }
 
 /* ── Items table ────────────────────────────────────────── */
 #items-wrap { overflow-x: auto; }
@@ -158,30 +231,32 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
 #items-table th {
   text-align: left;
   font-size: .78rem; font-weight: 700; text-transform: uppercase;
-  color: #666; padding: .4rem .5rem;
-  border-bottom: 1.5px solid #dde1e9;
+  color: var(--text-secondary); padding: .4rem .5rem;
+  border-bottom: 1.5px solid var(--border);
   white-space: nowrap;
 }
 #items-table td { padding: .35rem .4rem; vertical-align: middle; }
 .item-name-input {
   width: 100%; min-width: 140px;
-  border: 1px solid #d0d5e0;
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: .3rem .55rem;
   font-size: .9rem;
-  background: #f9fafc;
+  color: var(--text);
+  background: var(--surface-alt);
 }
-.item-name-input:focus { outline: none; border-color: var(--navy-light); background: #fff; }
+.item-name-input:focus { outline: none; border-color: var(--navy-light); background: var(--surface); }
 .item-price-input {
   width: 6.5rem;
-  border: 1px solid #d0d5e0;
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: .3rem .55rem;
   font-size: .9rem;
   text-align: right;
-  background: #f9fafc;
+  color: var(--text);
+  background: var(--surface-alt);
 }
-.item-price-input:focus { outline: none; border-color: var(--navy-light); background: #fff; }
+.item-price-input:focus { outline: none; border-color: var(--navy-light); background: var(--surface); }
 .elig-cb { width: 16px; height: 16px; cursor: pointer; accent-color: var(--navy); }
 .elig-cell { text-align: center; }
 
@@ -191,9 +266,9 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
   display: flex; justify-content: flex-end; align-items: center;
   gap: .5rem;
   font-size: .95rem; font-weight: 700;
-  color: var(--navy);
+  color: var(--navy-fg);
   padding-top: .7rem;
-  border-top: 1.5px solid #dde1e9;
+  border-top: 1.5px solid var(--border);
 }
 #total-bar .total-val { font-size: 1.1rem; }
 
@@ -214,20 +289,21 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
 .options-row {
   display: flex; align-items: center; gap: .75rem;
   margin-top: .5rem;
-  font-size: .88rem; color: #555;
+  font-size: .88rem; color: var(--text-secondary);
 }
 .options-row input[type=number] {
   width: 4rem;
-  border: 1px solid #d0d5e0; border-radius: 6px;
+  border: 1px solid var(--border); border-radius: 6px;
   padding: .3rem .5rem; text-align: center;
-  font-size: .9rem; background: #f9fafc;
+  color: var(--text);
+  font-size: .9rem; background: var(--surface-alt);
 }
 
 /* ── Calcular button ────────────────────────────────────── */
 #calc-btn {
   display: block;
   margin: 1.2rem auto 0;
-  background: linear-gradient(135deg, var(--navy) 0%, var(--red) 100%);
+  background: linear-gradient(180deg, var(--navy-light) 0%, var(--navy) 100%);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -243,12 +319,12 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
 /* ── Errors ─────────────────────────────────────────────── */
 #errors {
   margin-top: 1rem;
-  background: #fde8e8;
-  border: 1px solid #f5b7b1;
+  background: var(--danger-tint);
+  border: 1px solid var(--danger-border);
   border-radius: 8px;
   padding: .7rem 1rem;
   font-size: .88rem;
-  color: #922b21;
+  color: var(--danger);
 }
 #errors ul { padding-left: 1.2rem; margin-top: .3rem; }
 
@@ -258,53 +334,53 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 1rem; flex-wrap: wrap; gap: .5rem;
 }
-#results-header h2 { font-size: 1.1rem; color: var(--navy); }
+#results-header h2 { font-size: 1.1rem; color: var(--navy-fg); }
 .results-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 .btn-action {
-  background: #fff;
-  border: 1.5px solid #bbc5da;
+  background: var(--surface);
+  border: 1.5px solid var(--border-strong);
   border-radius: 8px;
   padding: .35rem .85rem;
   font-size: .83rem; font-weight: 600;
-  color: #444;
+  color: var(--text-secondary);
   transition: all .15s;
 }
 .btn-action:hover { background: var(--navy-tint); border-color: var(--navy-light); }
-.btn-danger { border-color: #f5b7b1; color: #c0392b; }
-.btn-danger:hover { background: #fde8e8; border-color: #e74c3c; }
+.btn-danger { border-color: var(--danger-border); color: var(--danger); }
+.btn-danger:hover { background: var(--danger-tint); border-color: var(--danger); }
 
 /* ── Selection bar ──────────────────────────────────────────── */
 .selection-bar {
   display: flex; align-items: center; gap: .5rem;
   margin-bottom: 1rem;
-  font-size: .85rem; color: #555;
+  font-size: .85rem; color: var(--text-secondary);
   flex-wrap: wrap;
 }
 .btn-chip {
-  background: #fff;
-  border: 1.5px solid #bbc5da;
+  background: var(--surface);
+  border: 1.5px solid var(--border-strong);
   border-radius: 20px;
   padding: .2rem .75rem;
   font-size: .78rem; font-weight: 600;
-  color: var(--navy);
+  color: var(--navy-fg);
   transition: all .15s;
 }
 .btn-chip:hover { background: var(--navy-tint); border-color: var(--navy-light); }
-.selection-count { margin-left: auto; font-weight: 600; color: var(--navy); }
+.selection-count { margin-left: auto; font-weight: 600; color: var(--navy-fg); }
 
 /* ── Option card ─────────────────────────────────────────── */
 .option-card {
-  border: 1.5px solid #dde1e9;
+  border: 1.5px solid var(--border);
   border-radius: 10px;
   padding: 1rem 1.2rem;
   margin-bottom: 1rem;
-  background: #fff;
+  background: var(--surface);
   cursor: pointer;
-  transition: border-color .15s, box-shadow .15s;
+  transition: border-color .15s, box-shadow .15s, background .18s var(--ease-out);
 }
 .option-card:hover { border-color: var(--navy-light); box-shadow: 0 2px 8px rgba(27,42,92,.1); }
-.option-card.checked { border-color: var(--navy); box-shadow: 0 0 0 2px rgba(27,42,92,.18); }
-.option-card.best { border-color: #1e8449; }
+.option-card.checked { border-color: var(--navy-light); box-shadow: 0 0 0 2px rgba(27,42,92,.18); }
+.option-card.best { border-color: var(--success); }
 .option-card.best.checked { box-shadow: 0 0 0 2px rgba(30,132,73,.22); }
 
 .card-header {
@@ -315,22 +391,22 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
 .card-check { width: 18px; height: 18px; cursor: pointer; accent-color: var(--navy); }
 .card-rank {
   font-weight: 800; font-size: 1rem;
-  color: var(--navy);
+  color: var(--navy-fg);
   background: var(--navy-tint);
   border-radius: 50%;
   width: 1.75rem; height: 1.75rem;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.option-card.best .card-rank { background: #d5f5e3; color: #1a6b38; }
+.option-card.best .card-rank { background: var(--success-tint); color: var(--success-fg); }
 .best-badge {
   font-size: .72rem; font-weight: 700; text-transform: uppercase;
-  background: #d5f5e3; color: #1a6b38;
+  background: var(--success-tint); color: var(--success-fg);
   padding: .15rem .5rem; border-radius: 20px;
 }
 .card-score {
   margin-left: auto;
-  font-size: .82rem; color: #777;
+  font-size: .82rem; color: var(--text-faint);
 }
 .payer-rows { display: flex; flex-direction: column; gap: .5rem; }
 .payer-row {
@@ -340,57 +416,145 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
   align-items: start;
   font-size: .88rem;
 }
-.payer-row-name { font-weight: 700; color: #1a1a2e; }
-.payer-row-total { font-weight: 700; color: var(--navy); text-align: right; }
-.payer-row-target { color: #888; font-size: .8rem; text-align: right; }
+.payer-row-name { font-weight: 700; color: var(--text); }
+.payer-row-total { font-weight: 700; color: var(--navy-fg); text-align: right; }
+.payer-row-target { color: var(--text-faint); font-size: .8rem; text-align: right; }
 .payer-row-dev { font-size: .8rem; font-weight: 600; }
-.dev-ok { color: #1e8449; }
-.dev-warn { color: #b85c00; }
-.dev-bad { color: #c0392b; }
+.dev-ok { color: var(--success); }
+.dev-warn { color: var(--warning); }
+.dev-bad { color: var(--danger); }
 .item-tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .2rem; }
 .item-tag {
   font-size: .75rem;
-  background: #f0f2f8;
-  border: 1px solid #d8dce8;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 5px;
   padding: .1rem .4rem;
-  color: #444;
+  color: var(--text-secondary);
 }
 
 /* ── Progress bar inside card ─────────────────────────────── */
 .payer-bar-wrap { margin-top: .6rem; }
 .payer-bar-row { display: flex; align-items: center; gap: .4rem; margin-bottom: .3rem; font-size: .78rem; }
 .payer-bar-label { width: 8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
-.bar-track { flex: 1; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+.bar-track { flex: 1; height: 8px; background: var(--track); border-radius: 4px; overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 4px; transition: width .3s; }
-.bar-vals { font-size: .78rem; color: #555; white-space: nowrap; }
+.bar-vals { font-size: .78rem; color: var(--text-secondary); white-space: nowrap; }
 
 /* ── Print ───────────────────────────────────────────────── */
 @media print {
+  :root, :root[data-theme="dark"] {
+    --bg: #fff; --surface: #fff; --surface-alt: #fff; --surface-2: #fff;
+    --text: #1a1a2e; --text-secondary: #444; --text-faint: #888;
+    --border: #ccc; --border-strong: #999; --navy-fg: #1b2a5c; --navy-tint: #eaedf7;
+  }
   body { background: #fff; }
   #controls, .add-row-btn, #calc-btn, .results-actions, .btn-icon,
-  .selection-bar, .card-check-wrap,
+  .selection-bar, .card-check-wrap, .header-actions,
   .option-card:not(.checked), #errors { display: none !important; }
   .option-card.checked { border: 1px solid #ccc; box-shadow: none; break-inside: avoid; }
   #app { padding: 0; max-width: 100%; }
   .section { box-shadow: none; border: 1px solid #ccc; }
+}
+
+/* ── Info modal ─────────────────────────────────────────── */
+#info-overlay {
+  position: fixed; inset: 0;
+  background: var(--overlay);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.25rem;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 180ms var(--ease-out);
+}
+#info-overlay[hidden] { display: none; }
+#info-overlay.is-open { opacity: 1; }
+
+#info-modal {
+  background: var(--surface);
+  border-radius: 14px;
+  max-width: 560px; width: 100%;
+  max-height: min(80vh, 640px);
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(15, 20, 40, .3);
+  transform: scale(.95) translateY(6px);
+  opacity: 0;
+  transition: transform 200ms var(--ease-out), opacity 200ms var(--ease-out), background 180ms var(--ease-out);
+}
+#info-overlay.is-open #info-modal { transform: scale(1) translateY(0); opacity: 1; }
+
+#info-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.1rem 1.3rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#info-modal-header h2 { font-size: 1.05rem; color: var(--navy-fg); }
+#info-modal-close {
+  width: 1.9rem; height: 1.9rem;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-faint);
+  font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 130ms var(--ease-out), color 130ms var(--ease-out), transform 130ms var(--ease-out);
+}
+#info-modal-close:hover { background: var(--danger-tint); color: var(--danger); }
+#info-modal-close:active { transform: scale(0.9); }
+
+#info-modal-body {
+  padding: 1.1rem 1.3rem 1.4rem;
+  overflow-y: auto;
+  font-size: .9rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+#info-modal-body h3 {
+  font-size: .82rem; text-transform: uppercase; letter-spacing: .03em;
+  color: var(--navy-fg); margin: 1.1rem 0 .4rem;
+}
+#info-modal-body h3:first-child { margin-top: 0; }
+#info-modal-body p { margin-bottom: .5rem; }
+#info-modal-body ul { padding-left: 1.15rem; margin-bottom: .5rem; }
+#info-modal-body li { margin-bottom: .3rem; }
+#info-modal-body strong { color: var(--text); }
+.info-privacy-box {
+  background: var(--success-tint);
+  border: 1px solid var(--success-border);
+  border-radius: 10px;
+  padding: .8rem 1rem;
+  margin: .5rem 0 1rem;
+}
+.info-privacy-box h3 { color: var(--success-fg); margin-top: 0; }
+.info-privacy-box p:last-child { margin-bottom: 0; }
+.info-vibe-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .7rem 1rem;
+  font-size: .84rem; color: var(--text-secondary);
+}
+.info-vibe-box strong { color: var(--text); }
+
+@media (prefers-reduced-motion: reduce) {
+  #info-modal { transform: none; }
 }
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <div class="logo-mark"></div>
-    <div>
+    <img class="logo-mark logo-claro" src="logo_consejo_mini.svg" alt="Consejo de Estudiantes de Ciencias"><img class="logo-mark logo-oscuro" src="logo_consejo_mini_blanco.svg" alt="">
+    <div class="header-text">
       <h1>Reparto de Gastos</h1>
       <div class="subtitle">Consejo de Estudiantes · Facultad de Ciencias, Universidad de Zaragoza · <a href="../">← Formulario de los Anexos</a></div>
     </div>
+    <div class="header-actions">
+      <button class="icon-btn theme-toggle-btn" id="theme-toggle-btn" type="button" aria-pressed="false" title="Cambiar a modo oscuro">🌙</button>
+      <button class="icon-btn info-btn" id="info-open-btn" type="button" aria-haspopup="dialog" aria-controls="info-modal" title="Cómo funciona y privacidad">i</button>
+    </div>
   </header>
-
-  <p class="intro">Reparte las facturas de una actividad entre quienes la pagan (por defecto, 2/3 el Vicerrectorado y 1/3 el Vicedecanato),
-    de forma que cada factura vaya entera a un solo pagador y las partes se acerquen lo más posible a la proporción.
-    Así se sabe qué facturas van en el Anexo 4 del Vicerrectorado y cuáles en la carta al Decanato.
-    Los datos se quedan en este navegador.</p>
 
   <!-- ── PAGADORES ── -->
   <div class="section">
@@ -416,7 +580,7 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
       <tbody id="payers-body"></tbody>
     </table>
     <button class="add-row-btn" id="add-payer-btn">+ Añadir pagador</button>
-    <div id="pct-sum-warn" style="margin-top:.5rem; font-size:.82rem; color:#b85c00; display:none;"></div>
+    <div id="pct-sum-warn" style="margin-top:.5rem; font-size:.82rem; color:var(--warning); display:none;"></div>
   </div>
 
   <!-- ── CONCEPTOS ── -->
@@ -473,6 +637,38 @@ header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
   </div>
 </div><!-- #app -->
 
+<!-- ── Info modal ── -->
+<div id="info-overlay" hidden>
+  <div id="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-modal-title">
+    <div id="info-modal-header">
+      <h2 id="info-modal-title">ⓘ Sobre esta herramienta</h2>
+      <button id="info-modal-close" type="button" aria-label="Cerrar">✕</button>
+    </div>
+    <div id="info-modal-body">
+      <h3>Qué es</h3>
+      <p>Reparte el coste de una lista de conceptos (facturas, materiales, actividades…) entre varios pagadores, según el porcentaje, fracción o peso que le corresponda a cada uno. Calcula varias alternativas y elige la que mejor se ajuste a los objetivos de reparto.</p>
+
+      <h3>Cómo se usa</h3>
+      <ul>
+        <li><strong>Pagadores:</strong> añade quién paga y su parte, en porcentaje (%), fracción (a/b) o peso relativo.</li>
+        <li><strong>Conceptos:</strong> añade cada gasto con su precio. Puedes marcar qué pagadores son elegibles para cada concepto.</li>
+        <li><strong>Calcular reparto:</strong> genera varias alternativas de asignación y muestra cuál se ajusta mejor a los porcentajes objetivo.</li>
+        <li><strong>Exportar / imprimir:</strong> selecciona una o varias alternativas y expórtalas a CSV o imprímelas.</li>
+      </ul>
+
+      <div class="info-privacy-box">
+        <h3>🔒 Privacidad de los datos</h3>
+        <p><strong>Ningún dato sale de tu navegador.</strong> Esta herramienta no tiene servidor: todos los cálculos se hacen localmente en tu dispositivo y nada se envía por internet. Lo que escribas se guarda solo en este navegador (<code>localStorage</code>), nunca en un servidor externo.</p>
+        <p>Funciona sin conexión y puedes <strong>descargar este archivo HTML</strong> y abrirlo directamente en tu ordenador para usarlo completamente offline, sin depender de esta página.</p>
+      </div>
+
+      <div class="info-vibe-box">
+        <strong>Nota:</strong> esta herramienta está «vibe-coded» (creada con ayuda de IA, de forma rápida e informal). Es útil como apoyo, pero conviene revisar los resultados antes de darlos por definitivos.
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 "use strict";
 
@@ -484,7 +680,7 @@ const COLORS = [
 
 // ── State ────────────────────────────────────────────────────────────────────
 let state = {
-  mode: "frac",          // "pct" | "frac" | "peso"
+  mode: "frac",           // "pct" | "frac" | "peso"
   payers: [
     { id: uid(), name: "Vicerrectorado", share: "2/3" },
     { id: uid(), name: "Decanato",       share: "1/3" },
@@ -1106,7 +1302,7 @@ function renderResults(res) {
   rb.innerHTML = "";
 
   if (res.options.length === 0) {
-    rb.innerHTML = "<p style='color:#888'>No se encontraron soluciones.</p>";
+    rb.innerHTML = "<p style='color:var(--text-faint)'>No se encontraron soluciones.</p>";
     updateSelectionCount();
     return;
   }
@@ -1139,7 +1335,7 @@ function renderResults(res) {
           <span class="color-dot" style="background:${color};margin-top:3px"></span>
           <span class="payer-row-name">${esc(state.payers[pi].name)}</span>
           <span class="payer-row-total">${fmt(tot)}</span>
-          <div><div class="item-tags">${itemTags || '<span class="item-tag" style="color:#aaa">—</span>'}</div></div>
+          <div><div class="item-tags">${itemTags || '<span class="item-tag" style="color:var(--text-faint)">—</span>'}</div></div>
           <span class="payer-row-dev ${devClass}">${devSign}${fmtN(devEur)} € (${devSign}${fmtN(devPct)}%)</span>
         </div>
       `;
@@ -1154,7 +1350,7 @@ function renderResults(res) {
         <div class="payer-bar-row">
           <span class="payer-bar-label">${esc(state.payers[pi].name)}</span>
           <div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${color}"></div></div>
-          <span class="bar-vals">${fmtN(pct)}% <span style="color:#aaa">(objetivo: ${fmtN(targetPct)}%)</span></span>
+          <span class="bar-vals">${fmtN(pct)}% <span style="color:var(--text-faint)">(objetivo: ${fmtN(targetPct)}%)</span></span>
         </div>
       `;
     }).join("");
@@ -1276,7 +1472,7 @@ el("print-btn").onclick = () => window.print();
 // ── Reset ─────────────────────────────────────────────────────────────────────
 el("reset-btn").onclick = () => {
   if (!confirm("¿Reiniciar todos los datos? Esta acción no se puede deshacer.")) return;
-  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  localStorage.removeItem(STORAGE_KEY);
   state = {
     mode: "frac",
     payers: [
@@ -1307,7 +1503,60 @@ function esc(s) {
     .replace(/"/g,"&quot;");
 }
 
+// ── Theme (light/dark) ──────────────────────────────────────────────────────
+const THEME_KEY = "reparto_gastos_theme";
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const btn = el("theme-toggle-btn");
+  const isDark = theme === "dark";
+  btn.textContent = isDark ? "☀️" : "🌙";
+  btn.title = isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
+  btn.setAttribute("aria-pressed", String(isDark));
+}
+
+el("theme-toggle-btn").onclick = () => {
+  const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  const next = current === "dark" ? "light" : "dark";
+  applyTheme(next);
+  try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+};
+
+// ── Info modal ───────────────────────────────────────────────────────────────
+let infoLastFocused = null;
+
+function openInfoModal() {
+  infoLastFocused = document.activeElement;
+  const overlay = el("info-overlay");
+  overlay.hidden = false;
+  // Force layout so the entering transition plays, then flip the class.
+  requestAnimationFrame(() => overlay.classList.add("is-open"));
+  document.addEventListener("keydown", onInfoKeydown);
+  el("info-modal-close").focus();
+}
+
+function closeInfoModal() {
+  const overlay = el("info-overlay");
+  overlay.classList.remove("is-open");
+  document.removeEventListener("keydown", onInfoKeydown);
+  const done = () => { overlay.hidden = true; };
+  const modal = el("info-modal");
+  modal.addEventListener("transitionend", done, { once: true });
+  if (infoLastFocused && infoLastFocused.focus) infoLastFocused.focus();
+}
+
+function onInfoKeydown(e) {
+  if (e.key === "Escape") closeInfoModal();
+}
+
+el("info-open-btn").onclick = openInfoModal;
+el("info-modal-close").onclick = closeInfoModal;
+el("info-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "info-overlay") closeInfoModal();
+});
+
 // ── Init ──────────────────────────────────────────────────────────────────────
+applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
 loadState();
 el("n-opts").value = state.nOpts;
 // Sync mode buttons

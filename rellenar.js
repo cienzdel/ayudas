@@ -11,7 +11,8 @@
   else raiz.Anexos = fabrica(raiz.PDFLib);
 })(typeof self !== 'undefined' ? self : this, function (PDFLib) {
   'use strict';
-  const { PDFDocument, StandardFonts, PDFName, TextAlignment } = PDFLib;
+  const { PDFDocument, StandardFonts, PDFName, TextAlignment,
+    pushGraphicsState, popGraphicsState, rectangle, clip, endPath } = PDFLib;
 
   const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
     'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -57,7 +58,9 @@
 
   // ---------- de los datos del formulario a los campos de cada anexo ----------
   // Devuelve { campos: {nombre: texto}, grupos: [{campos: [...], texto}], avisos: [] }
-  function camposAnexo(n, d) {
+  // Con opc.sinFilas (Anexo 4 de filas variables) no se rellenan las 12 filas fijas:
+  // las dibuja rellenarAnexo4, y los totales cuentan todas las facturas.
+  function camposAnexo(n, d, opc = {}) {
     const p = d.persona || {}, c = d.consejo || {}, b = d.banco || {}, s = d.solicitud || {}, j = d.justificacion || {};
     const campos = {}, grupos = [], avisos = [];
     const grupo = (pref, k, texto, desde = 1) => {
@@ -101,14 +104,17 @@
       });
       grupos.push({ campos: ['representacion1', 'representacion2'], texto: c.nombre });
       const filas = (j.facturas || []).filter(x => Object.values(x).some(Boolean));
-      if (filas.length > 12) avisos.push('El Anexo 4 solo tiene 12 filas: haced un segundo impreso con el resto.');
-      filas.slice(0, 12).forEach((x, i) => {
-        const k = i + 1;
-        Object.assign(campos, { ['orden' + k]: String(k), ['proveedor' + k]: x.proveedor,
-          ['numero' + k]: x.numero, ['fecha' + k]: x.fecha, ['conceptofra' + k]: x.concepto,
-          ['importe' + k]: euros(importe(x.importe)), ['subvencion' + k]: euros(importe(x.subvencion)) });
-      });
-      const tot = suma(filas.slice(0, 12).map(x => importe(x.subvencion)));
+      const enTabla = opc.sinFilas ? filas : filas.slice(0, 12);
+      if (!opc.sinFilas) {
+        if (filas.length > 12) avisos.push('El Anexo 4 solo tiene 12 filas: haced un segundo impreso con el resto.');
+        enTabla.forEach((x, i) => {
+          const k = i + 1;
+          Object.assign(campos, { ['orden' + k]: String(k), ['proveedor' + k]: x.proveedor,
+            ['numero' + k]: x.numero, ['fecha' + k]: x.fecha, ['conceptofra' + k]: x.concepto,
+            ['importe' + k]: euros(importe(x.importe)), ['subvencion' + k]: euros(importe(x.subvencion)) });
+        });
+      }
+      const tot = suma(enTabla.map(x => importe(x.subvencion)));
       campos.total = filas.length ? euros(tot) : '';
       campos.cantidad = campos.total ? campos.total + ' €' : '';
       const iban = limpiarIban(b.iban);
@@ -157,8 +163,13 @@
     return lineas;
   }
 
+  // El Anexo 4 se genera con tantas filas como facturas; el 1 y el 2, tal cual.
   async function rellenar(n, bytesPlantilla, datos) {
-    const { campos, grupos, avisos } = camposAnexo(n, datos);
+    return n === 4 ? rellenarAnexo4(bytesPlantilla, datos) : rellenarFijo(n, bytesPlantilla, datos);
+  }
+
+  async function rellenarFijo(n, bytesPlantilla, datos, opc = {}) {
+    const { campos, grupos, avisos } = camposAnexo(n, datos, opc);
     const doc = await PDFDocument.load(bytesPlantilla);
     const form = doc.getForm();
     const times = await doc.embedFont(StandardFonts.TimesRoman);
@@ -209,6 +220,112 @@
     doc.catalog.delete(PDFName.of('AcroForm'));
     doc.catalog.delete(PDFName.of('OpenAction'));
     doc.catalog.delete(PDFName.of('AA'));
+    doc.setProducer('Consejo de Estudiantes de Ciencias (formulario de ayudas)');
+    doc.setCreator('pdf-lib');
+    return { bytes: await doc.save(), avisos };
+  }
+
+  // ---------- Anexo 4 con tantas filas como facturas ----------
+  // Se rellena la plantilla (anexo4.pdf, de 12 filas) sin las filas y se aplana; después se
+  // recorta en franjas y se apilan: cabecera, una franja de fila por factura y la parte de abajo
+  // (total, datos bancarios, firmas). El pie de página queda siempre en su sitio. Si no cabe,
+  // la tabla sigue en otra página con el logo y la fila de títulos repetidos.
+  // Franjas en bp desde arriba, de \filasTabla en latex/anexo4.tex.
+  const A4 = {
+    cabecera: [0, 359.5],     // hasta el final de la fila de títulos de la tabla
+    titulos: [338.4, 359.5],  // fila de títulos (para las páginas de continuación)
+    logo: [0, 62],            // logo del Vicerrectorado (páginas de continuación)
+    fila: [397.8, 409.8],     // fila 4 de la plantilla: 12 bp
+    abajo: [505.8, 792],      // TOTAL A PAGAR ... nota de las facturas
+    pie: [792, null],         // pie de página
+    filaModelo: 4,
+    columnas: ['orden', 'proveedor', 'numero', 'fecha', 'conceptofra', 'importe', 'subvencion'],
+  };
+
+  async function rellenarAnexo4(bytesPlantilla, datos) {
+    const { bytes: plano, avisos } = await rellenarFijo(4, bytesPlantilla, datos, { sinFilas: true });
+    const plantilla = await PDFDocument.load(bytesPlantilla);
+    const pag0 = plantilla.getPage(0);
+    const W = pag0.getWidth(), H = pag0.getHeight();
+    const formP = plantilla.getForm();
+    const cols = A4.columnas.map(c => {
+      const f = formP.getTextField(c + A4.filaModelo);
+      const r = f.acroField.getWidgets()[0].getRectangle();
+      return { c, x: r.x, w: r.width, dy: H - (r.y + r.height) - A4.fila[0], h: r.height, align: f.getAlignment() };
+    });
+
+    const origen = await PDFDocument.load(plano);
+    const doc = await PDFDocument.create();
+    const times = await doc.embedFont(StandardFonts.TimesRoman);
+    // La página aplanada se incrusta una sola vez; cada franja es un recorte suyo desplazado.
+    const entera = await doc.embedPage(origen.getPage(0));
+    const F = {};
+    for (const k of ['cabecera', 'titulos', 'logo', 'fila', 'abajo', 'pie']) {
+      const [a, b] = A4[k];
+      F[k] = { a, alto: (b === null ? H : b) - a };
+    }
+    const poner = (pag, fr, yArriba) => {
+      pag.pushOperators(pushGraphicsState(), rectangle(0, H - yArriba - fr.alto, W, fr.alto), clip(), endPath());
+      pag.drawPage(entera, { x: 0, y: fr.a - yArriba });
+      pag.pushOperators(popGraphicsState());
+    };
+
+    const facturas = ((datos.justificacion || {}).facturas || []).filter(x => Object.values(x).some(Boolean));
+    const limite = A4.pie[0];
+    const inicioCont = A4.logo[1] + 30;  // logo + título «continuación»
+    const capacidad = (inicio, ultima) => Math.floor((limite - inicio - (ultima ? F.abajo.alto : 0)) / F.fila.alto);
+
+    // Reparto de filas por página
+    const paginas = [];
+    let quedan = facturas.length, inicio = A4.cabecera[1] + 0;
+    for (;;) {
+      const enUltima = capacidad(inicio, true);
+      if (quedan <= enUltima) { paginas.push(quedan); break; }
+      const n = Math.max(0, Math.min(capacidad(inicio, false), quedan - 1));
+      paginas.push(n); quedan -= n;
+      inicio = inicioCont + F.titulos.alto;
+    }
+
+    const celda = (pag, texto, col, yFila) => {
+      texto = codificable(times, texto || '');
+      if (!texto) return;
+      let tam = 8; const ancho = col.w - 3;
+      while (tam > 5 && times.widthOfTextAtSize(texto, tam) > ancho) tam -= 0.25;
+      if (times.widthOfTextAtSize(texto, tam) > ancho) avisos.push(`«${texto.slice(0, 30)}…» no cabe en su casilla.`);
+      const tw = times.widthOfTextAtSize(texto, tam);
+      const x = col.align === TextAlignment.Center ? col.x + (col.w - tw) / 2
+        : col.align === TextAlignment.Right ? col.x + col.w - 1.5 - tw : col.x + 1.5;
+      const base = yFila + col.dy + col.h / 2 + tam * 0.33;
+      pag.drawText(texto, { x, y: H - base, size: tam, font: times });
+    };
+
+    let k = 0;
+    paginas.forEach((nFilas, ip) => {
+      const pag = doc.addPage([W, H]);
+      let y;
+      if (ip === 0) { poner(pag, F.cabecera, 0); y = A4.cabecera[1]; }
+      else {
+        poner(pag, F.logo, 0);
+        pag.drawText('Anexo 4 (continuación). Facturas adjuntas:', { x: 79.4, y: H - (A4.logo[1] + 20), size: 12, font: times });
+        poner(pag, F.titulos, inicioCont); y = inicioCont + F.titulos.alto;
+      }
+      for (let i = 0; i < nFilas; i++, k++) {
+        poner(pag, F.fila, y);
+        const fa = facturas[k];
+        const vals = { orden: String(k + 1), proveedor: fa.proveedor, numero: fa.numero, fecha: fa.fecha,
+          conceptofra: fa.concepto, importe: euros(importe(fa.importe)), subvencion: euros(importe(fa.subvencion)) };
+        cols.forEach(col => celda(pag, vals[col.c], col, y));
+        y += F.fila.alto;
+      }
+      if (ip === paginas.length - 1) poner(pag, F.abajo, y);
+      poner(pag, F.pie, A4.pie[0]);
+      if (paginas.length > 1) {
+        const t = `Página ${ip + 1} de ${paginas.length}`;
+        pag.drawText(t, { x: 523 - times.widthOfTextAtSize(t, 9), y: H - 803, size: 9, font: times });
+      }
+    });
+
+    doc.setTitle('Anexo 4. Impreso de pagos a Delegaciones de Estudiantes');
     doc.setProducer('Consejo de Estudiantes de Ciencias (formulario de ayudas)');
     doc.setCreator('pdf-lib');
     return { bytes: await doc.save(), avisos };

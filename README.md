@@ -18,6 +18,9 @@ La guía paso a paso del trámite está en https://cienzdel.unizar.es/ayudas-vic
 - `pdf/`: los PDF compilados (copiar aquí tras compilar).
 - `rellenar.js`: rellena una plantilla con pdf-lib, reparte los textos largos por las líneas,
   encoge la letra si no cabe, aplana y quita `/AcroForm`, `/OpenAction` y `/AA`.
+  El Anexo 4 sale con tantas filas como facturas: se rellena la plantilla sin las filas, se aplana
+  y se recorta en franjas (cabecera, una fila, parte de abajo, pie; constante `A4`, que replica
+  `\filasTabla` de `latex/anexo4.tex`) que se apilan, con páginas de continuación si hace falta.
 - `index.html`, `app.js`, `estilo.css`: el formulario.
 - `reparto/`: herramienta para repartir las facturas entre Vicerrectorado (2/3) y Vicedecanato (1/3).
 - `ejemplo/`: datos ficticios (`ejemplo.json`, «Lucía Ejemplo», DNI 00000000T, IBAN de ceros)

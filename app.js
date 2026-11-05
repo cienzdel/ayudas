@@ -8,7 +8,7 @@
     facturas: [['proveedor', 'text'], ['numero', 'text'], ['fecha', 'text', 'dd/mm/aa'],
       ['concepto', 'text'], ['importe', 'importe'], ['subvencion', 'importe']],
   };
-  const MAX = { conceptos: 5, facturas: 12 };
+  const MAX = { conceptos: 5, facturas: 200 };
 
   // ---------- tablas ----------
   function anadirFila(tabla, valores = {}) {
