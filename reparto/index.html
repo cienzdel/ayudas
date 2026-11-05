@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reparto de gastos · Consejo de Estudiantes de Ciencias</title>
+<style>
+/* ── Reset & base ───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #1b2a5c;
+  --navy-light: #2f4a94;
+  --navy-tint: #eaedf7;
+  --red: #e2231a;
+  --red-tint: #fdeceb;
+}
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  background: #f5f6f8;
+  color: #1a1a2e;
+  min-height: 100vh;
+}
+h1, h2, h3 { font-weight: 700; }
+button { cursor: pointer; }
+
+/* ── Layout ─────────────────────────────────────────────── */
+#app { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+header {
+  display: flex; align-items: center; gap: 1rem;
+  margin-bottom: 1.5rem; padding-bottom: 1rem;
+  border-bottom: 2px solid #d0d3dc;
+}
+header h1 { font-size: 1.4rem; color: var(--navy); }
+header .subtitle { font-size: .85rem; color: #666; margin-top: .15rem; }
+.intro { margin: 0 0 1rem; font-size: .92rem; color: #444; max-width: 70ch; }
+.logo-mark {
+  width: 42px; height: 42px;
+  position: relative;
+  flex-shrink: 0;
+}
+.logo-mark::before {
+  content: "";
+  position: absolute; inset: 0;
+  border: 6px solid var(--red);
+  border-radius: 50%;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  transform: rotate(-45deg);
+}
+.logo-mark::after {
+  content: "";
+  position: absolute; bottom: 1px; right: 1px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--navy);
+}
+
+/* ── Sections ───────────────────────────────────────────── */
+.section {
+  background: #fff;
+  border: 1px solid #dde1e9;
+  border-radius: 10px;
+  padding: 1.25rem 1.4rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+.section-title {
+  font-size: 1rem; font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 1rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+.section-title .icon { font-size: 1.1rem; }
+
+/* ── Split mode selector ────────────────────────────────── */
+.split-mode-bar {
+  display: flex; align-items: center; gap: .5rem;
+  margin-bottom: 1rem; flex-wrap: wrap;
+}
+.split-mode-bar label { font-size: .85rem; font-weight: 600; color: #555; margin-right: .25rem; }
+.mode-btn {
+  padding: .3rem .75rem;
+  border: 1.5px solid #b0b8cc;
+  border-radius: 20px;
+  background: #fff;
+  font-size: .82rem;
+  color: #444;
+  transition: all .15s;
+}
+.mode-btn.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+  font-weight: 700;
+}
+.mode-btn:hover:not(.active) { background: var(--red-tint); border-color: var(--red); }
+
+/* ── Payers table ───────────────────────────────────────── */
+#payers-table { width: 100%; border-collapse: collapse; }
+#payers-table th {
+  text-align: left;
+  font-size: .8rem; font-weight: 700; text-transform: uppercase;
+  color: #666; padding: .4rem .5rem;
+  border-bottom: 1.5px solid #dde1e9;
+}
+#payers-table td { padding: .4rem .4rem; vertical-align: middle; }
+.payer-name-input {
+  width: 100%;
+  border: 1px solid #d0d5e0;
+  border-radius: 6px;
+  padding: .35rem .6rem;
+  font-size: .92rem;
+  color: #1a1a2e;
+  background: #f9fafc;
+}
+.payer-name-input:focus { outline: none; border-color: var(--navy-light); background: #fff; }
+.payer-share-input {
+  width: 7rem;
+  border: 1px solid #d0d5e0;
+  border-radius: 6px;
+  padding: .35rem .6rem;
+  font-size: .92rem;
+  text-align: right;
+  background: #f9fafc;
+}
+.payer-share-input:focus { outline: none; border-color: var(--navy-light); background: #fff; }
+.pct-badge {
+  display: inline-block;
+  min-width: 3.5rem; text-align: center;
+  font-size: .78rem; font-weight: 700;
+  padding: .2rem .5rem;
+  border-radius: 12px;
+  background: var(--navy-tint);
+  color: var(--navy);
+}
+.pct-badge.warn { background: #fff3e0; color: #b85c00; }
+.pct-badge.error { background: #fde8e8; color: #c0392b; }
+.color-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── Btn small ──────────────────────────────────────────── */
+.btn-icon {
+  background: none; border: none;
+  color: #888; font-size: 1rem;
+  padding: .2rem .35rem; border-radius: 5px;
+  transition: color .15s, background .15s;
+}
+.btn-icon:hover { color: #c0392b; background: #fde8e8; }
+
+/* ── Items table ────────────────────────────────────────── */
+#items-wrap { overflow-x: auto; }
+#items-table { width: 100%; border-collapse: collapse; }
+#items-table th {
+  text-align: left;
+  font-size: .78rem; font-weight: 700; text-transform: uppercase;
+  color: #666; padding: .4rem .5rem;
+  border-bottom: 1.5px solid #dde1e9;
+  white-space: nowrap;
+}
+#items-table td { padding: .35rem .4rem; vertical-align: middle; }
+.item-name-input {
+  width: 100%; min-width: 140px;
+  border: 1px solid #d0d5e0;
+  border-radius: 6px;
+  padding: .3rem .55rem;
+  font-size: .9rem;
+  background: #f9fafc;
+}
+.item-name-input:focus { outline: none; border-color: var(--navy-light); background: #fff; }
+.item-price-input {
+  width: 6.5rem;
+  border: 1px solid #d0d5e0;
+  border-radius: 6px;
+  padding: .3rem .55rem;
+  font-size: .9rem;
+  text-align: right;
+  background: #f9fafc;
+}
+.item-price-input:focus { outline: none; border-color: var(--navy-light); background: #fff; }
+.elig-cb { width: 16px; height: 16px; cursor: pointer; accent-color: var(--navy); }
+.elig-cell { text-align: center; }
+
+/* ── Total bar ──────────────────────────────────────────── */
+#total-bar {
+  margin-top: .8rem;
+  display: flex; justify-content: flex-end; align-items: center;
+  gap: .5rem;
+  font-size: .95rem; font-weight: 700;
+  color: var(--navy);
+  padding-top: .7rem;
+  border-top: 1.5px solid #dde1e9;
+}
+#total-bar .total-val { font-size: 1.1rem; }
+
+/* ── Add row buttons ────────────────────────────────────── */
+.add-row-btn {
+  margin-top: .7rem;
+  background: none;
+  border: 1.5px dashed var(--navy-light);
+  border-radius: 7px;
+  color: var(--navy-light);
+  font-size: .85rem; font-weight: 600;
+  padding: .35rem .8rem;
+  transition: all .15s;
+}
+.add-row-btn:hover { background: var(--navy-tint); border-style: solid; }
+
+/* ── Options count ──────────────────────────────────────── */
+.options-row {
+  display: flex; align-items: center; gap: .75rem;
+  margin-top: .5rem;
+  font-size: .88rem; color: #555;
+}
+.options-row input[type=number] {
+  width: 4rem;
+  border: 1px solid #d0d5e0; border-radius: 6px;
+  padding: .3rem .5rem; text-align: center;
+  font-size: .9rem; background: #f9fafc;
+}
+
+/* ── Calcular button ────────────────────────────────────── */
+#calc-btn {
+  display: block;
+  margin: 1.2rem auto 0;
+  background: linear-gradient(135deg, var(--navy) 0%, var(--red) 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: .75rem 2.5rem;
+  font-size: 1.05rem; font-weight: 700;
+  letter-spacing: .02em;
+  box-shadow: 0 2px 8px rgba(27,42,92,.3);
+  transition: opacity .15s, transform .1s;
+}
+#calc-btn:hover { opacity: .9; transform: translateY(-1px); }
+#calc-btn:active { transform: translateY(0); }
+
+/* ── Errors ─────────────────────────────────────────────── */
+#errors {
+  margin-top: 1rem;
+  background: #fde8e8;
+  border: 1px solid #f5b7b1;
+  border-radius: 8px;
+  padding: .7rem 1rem;
+  font-size: .88rem;
+  color: #922b21;
+}
+#errors ul { padding-left: 1.2rem; margin-top: .3rem; }
+
+/* ── Results ─────────────────────────────────────────────── */
+#results { margin-top: 1.5rem; }
+#results-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1rem; flex-wrap: wrap; gap: .5rem;
+}
+#results-header h2 { font-size: 1.1rem; color: var(--navy); }
+.results-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.btn-action {
+  background: #fff;
+  border: 1.5px solid #bbc5da;
+  border-radius: 8px;
+  padding: .35rem .85rem;
+  font-size: .83rem; font-weight: 600;
+  color: #444;
+  transition: all .15s;
+}
+.btn-action:hover { background: var(--navy-tint); border-color: var(--navy-light); }
+.btn-danger { border-color: #f5b7b1; color: #c0392b; }
+.btn-danger:hover { background: #fde8e8; border-color: #e74c3c; }
+
+/* ── Selection bar ──────────────────────────────────────────── */
+.selection-bar {
+  display: flex; align-items: center; gap: .5rem;
+  margin-bottom: 1rem;
+  font-size: .85rem; color: #555;
+  flex-wrap: wrap;
+}
+.btn-chip {
+  background: #fff;
+  border: 1.5px solid #bbc5da;
+  border-radius: 20px;
+  padding: .2rem .75rem;
+  font-size: .78rem; font-weight: 600;
+  color: var(--navy);
+  transition: all .15s;
+}
+.btn-chip:hover { background: var(--navy-tint); border-color: var(--navy-light); }
+.selection-count { margin-left: auto; font-weight: 600; color: var(--navy); }
+
+/* ── Option card ─────────────────────────────────────────── */
+.option-card {
+  border: 1.5px solid #dde1e9;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.option-card:hover { border-color: var(--navy-light); box-shadow: 0 2px 8px rgba(27,42,92,.1); }
+.option-card.checked { border-color: var(--navy); box-shadow: 0 0 0 2px rgba(27,42,92,.18); }
+.option-card.best { border-color: #1e8449; }
+.option-card.best.checked { box-shadow: 0 0 0 2px rgba(30,132,73,.22); }
+
+.card-header {
+  display: flex; align-items: center; gap: .6rem;
+  margin-bottom: .7rem;
+}
+.card-check-wrap { display: flex; align-items: center; flex-shrink: 0; }
+.card-check { width: 18px; height: 18px; cursor: pointer; accent-color: var(--navy); }
+.card-rank {
+  font-weight: 800; font-size: 1rem;
+  color: var(--navy);
+  background: var(--navy-tint);
+  border-radius: 50%;
+  width: 1.75rem; height: 1.75rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.option-card.best .card-rank { background: #d5f5e3; color: #1a6b38; }
+.best-badge {
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  background: #d5f5e3; color: #1a6b38;
+  padding: .15rem .5rem; border-radius: 20px;
+}
+.card-score {
+  margin-left: auto;
+  font-size: .82rem; color: #777;
+}
+.payer-rows { display: flex; flex-direction: column; gap: .5rem; }
+.payer-row {
+  display: grid;
+  grid-template-columns: 10px 9rem 6rem 1fr auto;
+  gap: .5rem;
+  align-items: start;
+  font-size: .88rem;
+}
+.payer-row-name { font-weight: 700; color: #1a1a2e; }
+.payer-row-total { font-weight: 700; color: var(--navy); text-align: right; }
+.payer-row-target { color: #888; font-size: .8rem; text-align: right; }
+.payer-row-dev { font-size: .8rem; font-weight: 600; }
+.dev-ok { color: #1e8449; }
+.dev-warn { color: #b85c00; }
+.dev-bad { color: #c0392b; }
+.item-tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .2rem; }
+.item-tag {
+  font-size: .75rem;
+  background: #f0f2f8;
+  border: 1px solid #d8dce8;
+  border-radius: 5px;
+  padding: .1rem .4rem;
+  color: #444;
+}
+
+/* ── Progress bar inside card ─────────────────────────────── */
+.payer-bar-wrap { margin-top: .6rem; }
+.payer-bar-row { display: flex; align-items: center; gap: .4rem; margin-bottom: .3rem; font-size: .78rem; }
+.payer-bar-label { width: 8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.bar-track { flex: 1; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+.bar-vals { font-size: .78rem; color: #555; white-space: nowrap; }
+
+/* ── Print ───────────────────────────────────────────────── */
+@media print {
+  body { background: #fff; }
+  #controls, .add-row-btn, #calc-btn, .results-actions, .btn-icon,
+  .selection-bar, .card-check-wrap,
+  .option-card:not(.checked), #errors { display: none !important; }
+  .option-card.checked { border: 1px solid #ccc; box-shadow: none; break-inside: avoid; }
+  #app { padding: 0; max-width: 100%; }
+  .section { box-shadow: none; border: 1px solid #ccc; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo-mark"></div>
+    <div>
+      <h1>Reparto de Gastos</h1>
+      <div class="subtitle">Consejo de Estudiantes · Facultad de Ciencias, Universidad de Zaragoza · <a href="../">← Formulario de los Anexos</a></div>
+    </div>
+  </header>
+
+  <p class="intro">Reparte las facturas de una actividad entre quienes la pagan (por defecto, 2/3 el Vicerrectorado y 1/3 el Vicedecanato),
+    de forma que cada factura vaya entera a un solo pagador y las partes se acerquen lo más posible a la proporción.
+    Así se sabe qué facturas van en el Anexo 4 del Vicerrectorado y cuáles en la carta al Decanato.
+    Los datos se quedan en este navegador.</p>
+
+  <!-- ── PAGADORES ── -->
+  <div class="section">
+    <div class="section-title"><span class="icon">👥</span> Pagadores</div>
+
+    <div class="split-mode-bar">
+      <label>Modo de reparto:</label>
+      <button class="mode-btn active" data-mode="pct">Porcentaje (%)</button>
+      <button class="mode-btn" data-mode="frac">Fracción (a/b)</button>
+      <button class="mode-btn" data-mode="peso">Peso relativo</button>
+    </div>
+
+    <table id="payers-table">
+      <thead>
+        <tr>
+          <th style="width:1rem"></th>
+          <th>Nombre</th>
+          <th id="share-col-header">Porcentaje</th>
+          <th>% efectivo</th>
+          <th style="width:2rem"></th>
+        </tr>
+      </thead>
+      <tbody id="payers-body"></tbody>
+    </table>
+    <button class="add-row-btn" id="add-payer-btn">+ Añadir pagador</button>
+    <div id="pct-sum-warn" style="margin-top:.5rem; font-size:.82rem; color:#b85c00; display:none;"></div>
+  </div>
+
+  <!-- ── CONCEPTOS ── -->
+  <div class="section">
+    <div class="section-title"><span class="icon">🧾</span> Conceptos</div>
+    <div id="items-wrap">
+      <table id="items-table">
+        <thead>
+          <tr id="items-thead-row">
+            <th>Concepto</th>
+            <th>Precio (€)</th>
+            <!-- eligibility cols injected here -->
+            <th style="width:2rem"></th>
+          </tr>
+        </thead>
+        <tbody id="items-body"></tbody>
+      </table>
+    </div>
+    <button class="add-row-btn" id="add-item-btn">+ Añadir concepto</button>
+    <div id="total-bar">
+      <span>Total:</span>
+      <span class="total-val" id="total-display">0,00 €</span>
+    </div>
+  </div>
+
+  <!-- ── OPCIONES ── -->
+  <div class="section" id="controls">
+    <div class="section-title"><span class="icon">⚙️</span> Opciones de cálculo</div>
+    <div class="options-row">
+      <label for="n-opts">Número de alternativas:</label>
+      <input type="number" id="n-opts" min="1" max="20" value="5">
+    </div>
+    <button id="calc-btn">Calcular reparto</button>
+    <div id="errors" style="display:none;"></div>
+  </div>
+
+  <!-- ── RESULTADOS ── -->
+  <div id="results" style="display:none;">
+    <div id="results-header">
+      <h2>🗂️ Alternativas de reparto</h2>
+      <div class="results-actions">
+        <button class="btn-action" id="export-csv-btn">⬇️ Exportar CSV</button>
+        <button class="btn-action" id="print-btn">🖨️ Imprimir</button>
+        <button class="btn-action btn-danger" id="reset-btn">🔄 Reiniciar</button>
+      </div>
+    </div>
+    <div class="selection-bar">
+      <span>Incluir en exportación / impresión:</span>
+      <button class="btn-chip" id="select-all-btn" type="button">Todas</button>
+      <button class="btn-chip" id="select-none-btn" type="button">Ninguna</button>
+      <span class="selection-count" id="selection-count"></span>
+    </div>
+    <div id="results-body"></div>
+  </div>
+</div><!-- #app -->
+
+<script>
+"use strict";
+
+// ── Palette ──────────────────────────────────────────────────────────────────
+const COLORS = [
+  "#1b2a5c","#e2231a","#1e8449","#b85c00","#7d3c98",
+  "#117a65","#b7950b","#2c4a8c","#784212","#616a6b"
+];
+
+// ── State ────────────────────────────────────────────────────────────────────
+let state = {
+  mode: "frac",          // "pct" | "frac" | "peso"
+  payers: [
+    { id: uid(), name: "Vicerrectorado", share: "2/3" },
+    { id: uid(), name: "Decanato",       share: "1/3" },
+  ],
+  items: [
+    { id: uid(), name: "", price: "" },
+  ],
+  nOpts: 5,
+  results: null,           // last computed results
+  selectedCards: new Set(), // indices into results.options included in export/print
+};
+
+function uid() {
+  return Math.random().toString(36).slice(2,9) + Date.now().toString(36);
+}
+
+// ── Persistence ──────────────────────────────────────────────────────────────
+const STORAGE_KEY = "reparto_gastos_v2";
+
+function saveState() {
+  try {
+    const s = {
+      mode: state.mode,
+      payers: state.payers,
+      items: state.items,
+      nOpts: state.nOpts,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (s.mode) state.mode = s.mode;
+    if (Array.isArray(s.payers) && s.payers.length >= 1) state.payers = s.payers;
+    if (Array.isArray(s.items) && s.items.length >= 1) state.items = s.items;
+    if (s.nOpts) state.nOpts = s.nOpts;
+  } catch(e) {}
+}
+
+// ── Normalise shares ─────────────────────────────────────────────────────────
+function parsePct(s) {
+  const v = parseFloat(String(s).replace(",", "."));
+  return isNaN(v) ? null : v;
+}
+
+function parseFrac(s) {
+  // "2/3" or "2" → numeric
+  s = String(s).trim();
+  if (s.includes("/")) {
+    const [a, b] = s.split("/").map(x => parseFloat(x.trim().replace(",",".")));
+    if (isNaN(a) || isNaN(b) || b === 0) return null;
+    return a / b;
+  }
+  const v = parseFloat(s.replace(",","."));
+  return isNaN(v) ? null : v;
+}
+
+function parsePeso(s) {
+  const v = parseFloat(String(s).replace(",","."));
+  return isNaN(v) || v < 0 ? null : v;
+}
+
+function getRawShares() {
+  return state.payers.map(p => {
+    switch(state.mode) {
+      case "pct":  return parsePct(p.share);
+      case "frac": return parseFrac(p.share);
+      case "peso": return parsePeso(p.share);
+    }
+  });
+}
+
+function getEffectivePcts() {
+  const raw = getRawShares();
+  if (raw.some(v => v === null || v < 0)) return null;
+  if (state.mode === "pct") {
+    const sum = raw.reduce((a,b) => a + b, 0);
+    if (Math.abs(sum - 100) > 0.001) return null; // will show warning separately
+    return raw.map(v => v / 100);
+  }
+  if (state.mode === "frac") {
+    const sum = raw.reduce((a,b) => a + b, 0);
+    if (Math.abs(sum - 1) > 0.001) return null; // will show warning separately
+    return raw.map(v => v / 1);
+  }
+  const sum = raw.reduce((a,b) => a + b, 0);
+  if (sum <= 0) return null;
+  return raw.map(v => v / sum);
+}
+
+function getEffectivePctsUnchecked() {
+  // returns proportions even if the shares don't sum to their required total, for display
+  const raw = getRawShares();
+  if (raw.some(v => v === null || v < 0)) return null;
+  const sum = state.mode === "pct" ? 100 : state.mode === "frac" ? 1 : raw.reduce((a,b)=>a+b,0);
+  if (sum <= 0) return null;
+  return raw.map(v => v / sum);
+}
+
+// Returns a warning message if the current mode's shares don't sum to the
+// required total (100% for percentages, 1 for fractions), or null if fine.
+// Weights ("peso") have no fixed target — they're always normalised freely.
+function shareSumWarning() {
+  const raw = getRawShares();
+  const sum = raw.reduce((a,b) => a + (b||0), 0);
+  if (state.mode === "pct") {
+    if (Math.abs(sum - 100) > 0.001) {
+      return `⚠ Los porcentajes suman ${fmtN(sum)}%, deben sumar 100%.`;
+    }
+  } else if (state.mode === "frac") {
+    if (Math.abs(sum - 1) > 0.001) {
+      return `⚠ Las fracciones suman ${fmtN(sum, 4)}, deben sumar 1 (p. ej. 2/3 + 1/3).`;
+    }
+  }
+  return null;
+}
+
+// ── DOM helpers ──────────────────────────────────────────────────────────────
+function el(id) { return document.getElementById(id); }
+function fmt(cents) {
+  return (cents / 100).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+}
+function fmtN(n, decimals=2) {
+  return n.toLocaleString("es-ES", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+function parsePriceCents(s) {
+  const v = parseFloat(String(s).replace(",",".").replace(/[^\d.]/g,""));
+  if (isNaN(v) || v < 0) return null;
+  return Math.round(v * 100);
+}
+
+// ── Render: payers ───────────────────────────────────────────────────────────
+function renderPayers() {
+  const mode = state.mode;
+  // Header label
+  const headerLabels = { pct: "Porcentaje", frac: "Fracción (a/b)", peso: "Peso relativo" };
+  el("share-col-header").textContent = headerLabels[mode];
+
+  const props = getEffectivePctsUnchecked();
+  const tbody = el("payers-body");
+  tbody.innerHTML = "";
+
+  state.payers.forEach((p, i) => {
+    const color = COLORS[i % COLORS.length];
+    const prop = props ? props[i] : null;
+    const propPct = prop !== null ? prop * 100 : null;
+
+    // badge class
+    let badgeClass = "pct-badge";
+    if (prop === null) badgeClass += " error";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><span class="color-dot" style="background:${color}"></span></td>
+      <td><input class="payer-name-input" value="${esc(p.name)}" data-pid="${p.id}" placeholder="Nombre pagador"></td>
+      <td><input class="payer-share-input" value="${esc(p.share)}" data-pid="${p.id}" placeholder="${mode==='pct'?'e.g. 50':mode==='frac'?'e.g. 2/3':'e.g. 1'}"></td>
+      <td><span class="${badgeClass}" id="pct-badge-${p.id}">${propPct !== null ? fmtN(propPct)+"%" : "—"}</span></td>
+      <td>${state.payers.length > 1 ? `<button class="btn-icon" title="Eliminar" data-del-pid="${p.id}">✕</button>` : ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // share sum warning
+  const warnEl = el("pct-sum-warn");
+  const warnMsg = shareSumWarning();
+  if (warnMsg) {
+    warnEl.style.display = "";
+    warnEl.textContent = warnMsg;
+  } else {
+    warnEl.style.display = "none";
+  }
+
+  attachPayerEvents();
+  renderItemsEligibilityCols();
+}
+
+// Lightweight update of computed % badges + warning, without rebuilding
+// the input rows — keeps focus/cursor position while typing a share value.
+function refreshPayerDerived() {
+  const props = getEffectivePctsUnchecked();
+  state.payers.forEach((p, i) => {
+    const badge = document.getElementById(`pct-badge-${p.id}`);
+    if (!badge) return;
+    const prop = props ? props[i] : null;
+    const propPct = prop !== null ? prop * 100 : null;
+    badge.textContent = propPct !== null ? fmtN(propPct) + "%" : "—";
+    badge.classList.toggle("error", prop === null);
+  });
+
+  const warnEl = el("pct-sum-warn");
+  const warnMsg = shareSumWarning();
+  if (warnMsg) {
+    warnEl.style.display = "";
+    warnEl.textContent = warnMsg;
+  } else {
+    warnEl.style.display = "none";
+  }
+}
+
+function attachPayerEvents() {
+  el("payers-body").querySelectorAll(".payer-name-input").forEach(inp => {
+    inp.oninput = () => {
+      const pid = inp.dataset.pid;
+      const p = state.payers.find(x => x.id === pid);
+      if (p) p.name = inp.value;
+      saveState();
+      // Update eligibility column header text in place (no rebuild, keeps focus)
+      const th = document.querySelector(`[data-elig-th="${pid}"]`);
+      if (th) {
+        const idx = state.payers.findIndex(x => x.id === pid);
+        th.innerHTML = `<span style="color:${COLORS[idx%COLORS.length]}">■</span> ${esc(p.name||"Pagador")}`;
+      }
+    };
+  });
+  el("payers-body").querySelectorAll(".payer-share-input").forEach(inp => {
+    inp.oninput = () => {
+      const pid = inp.dataset.pid;
+      const p = state.payers.find(x => x.id === pid);
+      if (p) p.share = inp.value;
+      saveState();
+      refreshPayerDerived();
+    };
+  });
+  el("payers-body").querySelectorAll("[data-del-pid]").forEach(btn => {
+    btn.onclick = () => {
+      const pid = btn.dataset.delPid;
+      state.payers = state.payers.filter(x => x.id !== pid);
+      // Remove eligibility for this payer from all items
+      state.items.forEach(it => { if (it.elig) delete it.elig[pid]; });
+      saveState();
+      renderPayers();
+    };
+  });
+}
+
+el("add-payer-btn").onclick = () => {
+  state.payers.push({ id: uid(), name: "Nuevo pagador", share: "" });
+  saveState();
+  renderPayers();
+};
+
+el("payers-body").addEventListener("change", () => {});
+
+// Mode buttons
+document.querySelectorAll(".mode-btn").forEach(btn => {
+  btn.onclick = () => {
+    state.mode = btn.dataset.mode;
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    // Reset shares to empty when switching mode so user re-enters
+    // (but keep if values can be reinterpreted — skip reset for simplicity)
+    saveState();
+    renderPayers();
+  };
+});
+
+// ── Render: items ────────────────────────────────────────────────────────────
+function renderItemsEligibilityCols() {
+  // Update thead eligibility columns
+  const theadRow = el("items-thead-row");
+  // Remove old elig headers (they have data-elig-th)
+  theadRow.querySelectorAll("[data-elig-th]").forEach(th => th.remove());
+  // Insert before last th
+  const lastTh = theadRow.querySelector("th:last-child");
+  state.payers.forEach(p => {
+    const th = document.createElement("th");
+    th.dataset.eligTh = p.id;
+    th.style.textAlign = "center";
+    th.style.whiteSpace = "nowrap";
+    th.style.fontSize = ".75rem";
+    th.innerHTML = `<span style="color:${COLORS[state.payers.indexOf(p)%COLORS.length]}">■</span> ${esc(p.name||"Pagador")}`;
+    theadRow.insertBefore(th, lastTh);
+  });
+}
+
+function getItemElig(item, payerId) {
+  // Default: eligible for all
+  if (!item.elig) return true;
+  if (item.elig[payerId] === undefined) return true;
+  return !!item.elig[payerId];
+}
+
+function renderItems() {
+  const tbody = el("items-body");
+  tbody.innerHTML = "";
+  let total = 0;
+
+  state.items.forEach((it, idx) => {
+    const cents = parsePriceCents(it.price);
+    if (cents !== null) total += cents;
+
+    const tr = document.createElement("tr");
+
+    let eligCells = state.payers.map(p => {
+      const checked = getItemElig(it, p.id) ? "checked" : "";
+      return `<td class="elig-cell"><input type="checkbox" class="elig-cb" ${checked} data-iid="${it.id}" data-pid="${p.id}" title="Elegible para ${esc(p.name)}"></td>`;
+    }).join("");
+
+    tr.innerHTML = `
+      <td><input class="item-name-input" value="${esc(it.name)}" data-iid="${it.id}" placeholder="Nombre del concepto"></td>
+      <td><input class="item-price-input" value="${esc(it.price)}" data-iid="${it.id}" placeholder="0,00"></td>
+      ${eligCells}
+      <td><button class="btn-icon" data-del-iid="${it.id}" title="Eliminar">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  el("total-display").textContent = fmt(total);
+  attachItemEvents();
+}
+
+function attachItemEvents() {
+  el("items-body").querySelectorAll(".item-name-input").forEach(inp => {
+    inp.oninput = () => {
+      const it = state.items.find(x => x.id === inp.dataset.iid);
+      if (it) it.name = inp.value;
+      saveState();
+    };
+  });
+  el("items-body").querySelectorAll(".item-price-input").forEach(inp => {
+    inp.oninput = () => {
+      const it = state.items.find(x => x.id === inp.dataset.iid);
+      if (it) it.price = inp.value;
+      saveState();
+      // Recalc total
+      let total = 0;
+      state.items.forEach(i => { const c = parsePriceCents(i.price); if (c!==null) total+=c; });
+      el("total-display").textContent = fmt(total);
+    };
+  });
+  el("items-body").querySelectorAll(".elig-cb").forEach(cb => {
+    cb.onchange = () => {
+      const it = state.items.find(x => x.id === cb.dataset.iid);
+      if (!it) return;
+      if (!it.elig) it.elig = {};
+      it.elig[cb.dataset.pid] = cb.checked;
+      saveState();
+    };
+  });
+  el("items-body").querySelectorAll("[data-del-iid]").forEach(btn => {
+    btn.onclick = () => {
+      state.items = state.items.filter(x => x.id !== btn.dataset.delIid);
+      saveState();
+      renderItems();
+    };
+  });
+}
+
+el("add-item-btn").onclick = () => {
+  state.items.push({ id: uid(), name: "", price: "" });
+  saveState();
+  renderItems();
+};
+
+el("n-opts").oninput = () => {
+  state.nOpts = parseInt(el("n-opts").value) || 5;
+  saveState();
+};
+
+// ── Validate ─────────────────────────────────────────────────────────────────
+function validate() {
+  const errs = [];
+
+  // Payers
+  if (state.payers.length < 2) errs.push("Debe haber al menos 2 pagadores.");
+
+  const props = getEffectivePctsUnchecked();
+  if (!props) errs.push("Alguno de los valores de reparto no es válido.");
+  else {
+    const warnMsg = shareSumWarning();
+    if (warnMsg) errs.push(warnMsg.replace(/^⚠ /, ""));
+  }
+
+  // Items
+  const validItems = state.items.filter(it => {
+    const c = parsePriceCents(it.price);
+    return c !== null && c > 0;
+  });
+  if (validItems.length === 0) errs.push("Debe haber al menos un concepto con precio válido.");
+
+  validItems.forEach(it => {
+    const eligPayers = state.payers.filter(p => getItemElig(it, p.id));
+    if (eligPayers.length === 0) {
+      errs.push(`El concepto «${it.name || "(sin nombre)"}» no tiene ningún pagador elegible.`);
+    }
+  });
+
+  return errs;
+}
+
+// ── Algorithm ─────────────────────────────────────────────────────────────────
+// Works in integer cents. All prices and targets are integers.
+// Assignment = array of payer-index per item (parallel to validItems array).
+
+function computeReparto() {
+  const props = getEffectivePctsUnchecked();
+  const validItems = state.items
+    .map((it, origIdx) => ({ ...it, origIdx, cents: parsePriceCents(it.price) }))
+    .filter(it => it.cents !== null && it.cents > 0);
+
+  const nP = state.payers.length;
+  const nI = validItems.length;
+  const totalCents = validItems.reduce((s,it)=>s+it.cents, 0);
+  const targets = props.map(w => w * totalCents); // float targets in cents
+
+  // Eligibility matrix: elig[i][p] = bool
+  const elig = validItems.map(it =>
+    state.payers.map((p,pi) => getItemElig(it, p.id))
+  );
+
+  // metric: [sum_abs_dev, max_abs_dev] — lower better
+  function metric(assignment) {
+    const totals = new Array(nP).fill(0);
+    assignment.forEach((p, i) => { totals[p] += validItems[i].cents; });
+    let sumDev = 0, maxDev = 0;
+    for (let p=0; p<nP; p++) {
+      const dev = Math.abs(totals[p] - targets[p]);
+      sumDev += dev;
+      if (dev > maxDev) maxDev = dev;
+    }
+    return [sumDev, maxDev];
+  }
+
+  function assignKey(assignment) { return assignment.join(","); }
+
+  const candidates = new Map(); // key -> {assignment, metric}
+
+  function addCandidate(asgn) {
+    const key = assignKey(asgn);
+    if (candidates.has(key)) return;
+    const m = metric(asgn);
+    candidates.set(key, { assignment: asgn.slice(), metric: m });
+  }
+
+  // ── Path 1: 2-payer subset-sum DP ───────────────────────────────────────
+  if (nP === 2) {
+    // Find subsets of items (assigned to payer 0) with sum close to targets[0]
+    // Items not assignable to payer 0 must go to payer 1, and vice versa.
+    const target0 = Math.round(targets[0]);
+
+    // Which items CAN go to payer 0 or 1?
+    const canP0 = validItems.map((it,i) => elig[i][0]);
+    const canP1 = validItems.map((it,i) => elig[i][1]);
+
+    // Forced assignments
+    const forced = new Array(nI).fill(-1);
+    for (let i=0;i<nI;i++) {
+      if (!canP0[i] && canP1[i]) forced[i] = 1;
+      else if (canP0[i] && !canP1[i]) forced[i] = 0;
+    }
+    const freeIdx = validItems.map((_,i)=>i).filter(i=>forced[i]===-1);
+    const forcedSum0 = validItems.reduce((s,it,i)=>s+(forced[i]===0?it.cents:0),0);
+    const adjTarget = target0 - forcedSum0; // how much we need from free items for p0
+
+    // DP over free items in cents
+    const maxSum = freeIdx.reduce((s,i)=>s+validItems[i].cents,0);
+    // dp[sum] = a bitmask index (just store any valid combination that reaches this sum)
+    // To recover top alternatives, store a few predecessors
+
+    // We'll use a lightweight DP: dp is a Set of achievable sums,
+    // but to reconstruct we store for each sum a representative assignment of free items.
+    // For large item counts, limit search to ensure speed.
+    const LIMIT = 22; // subset-sum is 2^n — safe up to ~22 items
+    const effectiveFree = freeIdx.length <= LIMIT ? freeIdx : freeIdx.slice(0,LIMIT);
+
+    // dp: Map<sum, assignment_of_free_items (0/1 array)>
+    let dp = new Map();
+    dp.set(0, new Array(effectiveFree.length).fill(0));
+
+    effectiveFree.forEach((origI, fi) => {
+      const price = validItems[origI].cents;
+      const newDp = new Map(dp);
+      for (const [sum, asgn] of dp) {
+        const ns = sum + price;
+        if (!newDp.has(ns)) {
+          const nasgn = asgn.slice();
+          nasgn[fi] = 1;
+          newDp.set(ns, nasgn);
+        }
+      }
+      dp = newDp;
+    });
+
+    // Collect sums sorted by closeness to adjTarget
+    const sums = [...dp.keys()].sort((a,b)=>Math.abs(a-adjTarget)-Math.abs(b-adjTarget));
+    const TOP_DP = Math.min(30, sums.length);
+
+    for (let si=0; si<TOP_DP; si++) {
+      const freeAsgn = dp.get(sums[si]); // assignment of effectiveFree items (1=payer0)
+      const full = new Array(nI).fill(0);
+      // forced items
+      for (let i=0;i<nI;i++) if (forced[i]!==-1) full[i]=forced[i];
+      // free items within DP window
+      effectiveFree.forEach((origI, fi) => { full[origI] = freeAsgn[fi] === 1 ? 0 : 1; });
+      // remaining free items beyond DP window (beyond LIMIT): greedy
+      if (freeIdx.length > LIMIT) {
+        const totals = [forcedSum0, 0];
+        effectiveFree.forEach((origI,fi)=>{ totals[full[origI]]+=validItems[origI].cents; });
+        for (let i=LIMIT; i<freeIdx.length; i++) {
+          const origI = freeIdx[i];
+          const p = (targets[0]-totals[0] >= targets[1]-totals[1]) ? 0 : 1;
+          full[origI] = (elig[origI][p]?p:(p===0?1:0));
+          totals[full[origI]] += validItems[origI].cents;
+        }
+      }
+      addCandidate(full);
+    }
+  }
+
+  // ── Path 2: multi-start greedy + local search (general) ───────────────────
+  const RESTARTS = nP === 2 ? 30 : 200;
+  const itemsDesc = validItems.map((_,i)=>i).sort((a,b)=>validItems[b].cents-validItems[a].cents);
+
+  function greedyAssign(shuffle) {
+    const order = shuffle
+      ? itemsDesc.slice().sort(()=>Math.random()-.5)
+      : itemsDesc.slice();
+    const totals = new Array(nP).fill(0);
+    const asgn = new Array(nI).fill(-1);
+
+    order.forEach(i => {
+      // Pick eligible payer furthest below its target (largest deficit)
+      let best = -1, bestDeficit = -Infinity;
+      for (let p=0;p<nP;p++) {
+        if (!elig[i][p]) continue;
+        const deficit = targets[p] - totals[p];
+        if (deficit > bestDeficit) { bestDeficit=deficit; best=p; }
+      }
+      if (best === -1) {
+        // fallback: any eligible
+        for (let p=0;p<nP;p++) { if (elig[i][p]) { best=p; break; } }
+      }
+      asgn[i] = best;
+      totals[best] += validItems[i].cents;
+    });
+    return asgn;
+  }
+
+  function localSearch(asgn) {
+    asgn = asgn.slice();
+    let [curSum,] = metric(asgn);
+    let improved = true;
+    while (improved) {
+      improved = false;
+      // Single moves
+      for (let i=0;i<nI;i++) {
+        const oldP = asgn[i];
+        for (let p=0;p<nP;p++) {
+          if (p===oldP || !elig[i][p]) continue;
+          asgn[i]=p;
+          const [ns,] = metric(asgn);
+          if (ns < curSum) { curSum=ns; oldP; improved=true; break; }
+          else asgn[i]=oldP;
+        }
+      }
+      // Pairwise swaps
+      for (let i=0;i<nI-1;i++) {
+        for (let j=i+1;j<nI;j++) {
+          if (asgn[i]===asgn[j]) continue;
+          if (!elig[i][asgn[j]] || !elig[j][asgn[i]]) continue;
+          const tmp=asgn[i]; asgn[i]=asgn[j]; asgn[j]=tmp;
+          const [ns,] = metric(asgn);
+          if (ns < curSum) { curSum=ns; improved=true; }
+          else { const t2=asgn[i]; asgn[i]=asgn[j]; asgn[j]=t2; }
+        }
+      }
+    }
+    return asgn;
+  }
+
+  for (let r=0;r<RESTARTS;r++) {
+    const g = greedyAssign(r>0);
+    const ls = localSearch(g);
+    addCandidate(ls);
+  }
+
+  // ── Sort & pick top N ──────────────────────────────────────────────────────
+  const nOpts = state.nOpts || 5;
+  const sorted = [...candidates.values()]
+    .sort((a,b)=>{
+      if (a.metric[0]!==b.metric[0]) return a.metric[0]-b.metric[0];
+      return a.metric[1]-b.metric[1];
+    })
+    .slice(0, nOpts);
+
+  // Build rich result objects
+  const options = sorted.map(cand => {
+    const totals = new Array(nP).fill(0);
+    const payerItems = state.payers.map(()=>[]);
+    cand.assignment.forEach((p,i)=>{
+      totals[p] += validItems[i].cents;
+      payerItems[p].push(validItems[i]);
+    });
+    return {
+      assignment: cand.assignment,
+      totals,
+      payerItems,
+      metric: cand.metric,
+    };
+  });
+
+  return {
+    options,
+    validItems,
+    targets,
+    totalCents,
+    props,
+  };
+}
+
+// ── Render results ───────────────────────────────────────────────────────────
+function renderResults(res) {
+  el("results").style.display = "";
+  const rb = el("results-body");
+  rb.innerHTML = "";
+
+  if (res.options.length === 0) {
+    rb.innerHTML = "<p style='color:#888'>No se encontraron soluciones.</p>";
+    updateSelectionCount();
+    return;
+  }
+
+  res.options.forEach((opt, idx) => {
+    const isBest = idx === 0;
+    const isChecked = state.selectedCards.has(idx);
+    const card = document.createElement("div");
+    card.className = "option-card" + (isBest?" best":"") + (isChecked?" checked":"");
+    card.dataset.idx = idx;
+
+    const sumDevEur = opt.metric[0] / 100;
+    const maxDevEur = opt.metric[1] / 100;
+
+    let payerRowsHtml = opt.totals.map((tot, pi) => {
+      const target = res.targets[pi];
+      const dev = tot - target;
+      const devEur = dev / 100;
+      const devPct = target > 0 ? (dev / target * 100) : 0;
+      let devClass = Math.abs(devPct) < 2 ? "dev-ok" : Math.abs(devPct) < 8 ? "dev-warn" : "dev-bad";
+      const devSign = devEur >= 0 ? "+" : "";
+      const color = COLORS[pi % COLORS.length];
+
+      const itemTags = opt.payerItems[pi].map(it =>
+        `<span class="item-tag">${esc(it.name||"(sin nombre)")} · ${fmt(it.cents)}</span>`
+      ).join("");
+
+      return `
+        <div class="payer-row">
+          <span class="color-dot" style="background:${color};margin-top:3px"></span>
+          <span class="payer-row-name">${esc(state.payers[pi].name)}</span>
+          <span class="payer-row-total">${fmt(tot)}</span>
+          <div><div class="item-tags">${itemTags || '<span class="item-tag" style="color:#aaa">—</span>'}</div></div>
+          <span class="payer-row-dev ${devClass}">${devSign}${fmtN(devEur)} € (${devSign}${fmtN(devPct)}%)</span>
+        </div>
+      `;
+    }).join("");
+
+    // Progress bars
+    const barsHtml = opt.totals.map((tot, pi) => {
+      const pct = res.totalCents > 0 ? (tot / res.totalCents * 100) : 0;
+      const targetPct = (res.props[pi] * 100);
+      const color = COLORS[pi % COLORS.length];
+      return `
+        <div class="payer-bar-row">
+          <span class="payer-bar-label">${esc(state.payers[pi].name)}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${color}"></div></div>
+          <span class="bar-vals">${fmtN(pct)}% <span style="color:#aaa">(objetivo: ${fmtN(targetPct)}%)</span></span>
+        </div>
+      `;
+    }).join("");
+
+    card.innerHTML = `
+      <div class="card-header">
+        <label class="card-check-wrap" title="Incluir en exportación/impresión">
+          <input type="checkbox" class="card-check" ${isChecked?"checked":""}>
+        </label>
+        <div class="card-rank">${idx+1}</div>
+        ${isBest?'<span class="best-badge">✓ Mejor opción</span>':''}
+        <span class="card-score">Desviación total: ${fmtN(sumDevEur)} € · Máx: ${fmtN(maxDevEur)} €</span>
+      </div>
+      <div class="payer-rows">${payerRowsHtml}</div>
+      <div class="payer-bar-wrap">${barsHtml}</div>
+    `;
+
+    const checkbox = card.querySelector(".card-check");
+    checkbox.onchange = () => toggleCardSelection(idx, checkbox.checked);
+    card.onclick = (e) => {
+      if (e.target.closest(".card-check-wrap")) return;
+      toggleCardSelection(idx, !state.selectedCards.has(idx));
+    };
+    rb.appendChild(card);
+  });
+
+  updateSelectionCount();
+}
+
+function toggleCardSelection(idx, on) {
+  if (on) state.selectedCards.add(idx); else state.selectedCards.delete(idx);
+  const card = el("results-body").querySelector(`.option-card[data-idx="${idx}"]`);
+  if (card) {
+    card.classList.toggle("checked", on);
+    const cb = card.querySelector(".card-check");
+    if (cb) cb.checked = on;
+  }
+  updateSelectionCount();
+}
+
+function updateSelectionCount() {
+  const countEl = el("selection-count");
+  if (!countEl) return;
+  const total = state.results ? state.results.options.length : 0;
+  countEl.textContent = total > 0 ? `${state.selectedCards.size} de ${total} seleccionadas` : "";
+}
+
+// ── Errors display ────────────────────────────────────────────────────────────
+function showErrors(errs) {
+  const errEl = el("errors");
+  if (errs.length === 0) { errEl.style.display="none"; return; }
+  errEl.style.display = "";
+  errEl.innerHTML = "<strong>⚠ Corrija los siguientes errores:</strong><ul>" +
+    errs.map(e=>`<li>${esc(e)}</li>`).join("") + "</ul>";
+}
+
+// ── Calc button ───────────────────────────────────────────────────────────────
+el("calc-btn").onclick = () => {
+  const errs = validate();
+  showErrors(errs);
+  if (errs.length > 0) { el("results").style.display="none"; return; }
+
+  try {
+    state.nOpts = parseInt(el("n-opts").value) || 5;
+    const res = computeReparto();
+    state.results = res;
+    state.selectedCards = new Set(res.options.length > 0 ? [0] : []);
+    renderResults(res);
+  } catch(e) {
+    showErrors(["Error interno al calcular: " + e.message]);
+  }
+};
+
+el("select-all-btn").onclick = () => {
+  if (!state.results) return;
+  state.results.options.forEach((_, i) => state.selectedCards.add(i));
+  renderResults(state.results);
+};
+el("select-none-btn").onclick = () => {
+  state.selectedCards.clear();
+  if (state.results) renderResults(state.results);
+};
+
+// ── Export CSV ────────────────────────────────────────────────────────────────
+el("export-csv-btn").onclick = () => {
+  if (!state.results) { alert("Primero calcule el reparto."); return; }
+  const res = state.results;
+  const indices = [...state.selectedCards].sort((a,b) => a - b);
+  if (indices.length === 0) { alert("Seleccione al menos una alternativa para exportar."); return; }
+
+  const rows = [["Alternativa","Concepto","Precio (€)","Pagador"]];
+  indices.forEach(idx => {
+    const opt = res.options[idx];
+    const label = `Opción ${idx+1}`;
+    opt.assignment.forEach((pi, ii) => {
+      const it = res.validItems[ii];
+      rows.push([label, it.name || "", (it.cents/100).toFixed(2).replace(".",","), state.payers[pi].name]);
+    });
+    state.payers.forEach((p,pi)=>{
+      rows.push([label, `TOTAL ${p.name}`, (opt.totals[pi]/100).toFixed(2).replace(".",","), ""]);
+    });
+  });
+
+  const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(";")).join("\r\n");
+  const blob = new Blob(["﻿"+csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = indices.length === 1
+    ? `reparto_gastos_opcion_${indices[0]+1}.csv`
+    : `reparto_gastos_${indices.length}_alternativas.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// ── Print ─────────────────────────────────────────────────────────────────────
+el("print-btn").onclick = () => window.print();
+
+// ── Reset ─────────────────────────────────────────────────────────────────────
+el("reset-btn").onclick = () => {
+  if (!confirm("¿Reiniciar todos los datos? Esta acción no se puede deshacer.")) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  state = {
+    mode: "frac",
+    payers: [
+      { id: uid(), name: "Vicerrectorado", share: "2/3" },
+      { id: uid(), name: "Decanato",       share: "1/3" },
+    ],
+    items: [{ id: uid(), name: "", price: "" }],
+    nOpts: 5,
+    results: null,
+    selectedCards: new Set(),
+  };
+  el("n-opts").value = 5;
+  el("results").style.display = "none";
+  el("errors").style.display = "none";
+  document.querySelectorAll(".mode-btn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.mode==="pct");
+  });
+  renderPayers();
+  renderItems();
+};
+
+// ── Escape HTML ───────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadState();
+el("n-opts").value = state.nOpts;
+// Sync mode buttons
+document.querySelectorAll(".mode-btn").forEach(b=>{
+  b.classList.toggle("active", b.dataset.mode===state.mode);
+});
+renderPayers();
+renderItems();
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+latex/*.log
+latex/*.synctex.gz
+latex/*.pdf
+node_modules/

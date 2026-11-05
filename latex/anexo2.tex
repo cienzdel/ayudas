@@ -1,0 +1,74 @@
+% !TEX program = pdflatex
+% Anexo 2: Informe del proyecto. Réplica rellenable del modelo oficial.
+% anexo2_sumas.tex carga este mismo archivo con \CONCALCULO (suma en Acrobat).
+\documentclass{article}
+\usepackage{anexos}
+\hypersetup{pdftitle={Anexo 2. Informe del proyecto}}
+
+% \importe{campo}{y}: raya y campo de importe con el símbolo del euro.
+\newcommand\importe[3][]{%
+  \pgfmathsetmacro\yRaya{#3+1}%
+  \raya{432}{497}{\yRaya}{0.5}\campo[\fmtImporte#1]{#2}{432}{497}{\yRaya}%
+  \tx{500}{#3}{€}}
+
+\begin{document}
+\begin{Form}
+\begin{tikzpicture}[remember picture,overlay,every node/.style={font=\fontsize{11}{13}\selectfont}]
+  % Cabecera y pie
+  \en{15.6bp}{75.3bp}{\includegraphics[width=180.7bp]{logo_vr.png}}
+  \tx[\arial\fontsize{7}{8}\selectfont]{65.2}{815.5}{Vicerrectorado de Estudiantes y Empleo – Plaza Basilio Paraíso 4, Edificio Paraninfo 50005 Zaragoza – \textcolor{blue}{\underline{vrestu@unizar.es}} 976761018}
+  \avisoNoOficial
+
+  \tx[\bfseries]{65.2}{98.2}{ANEXO 2}
+  \caja{65}{113}{526}{126}{fill=vrazul,draw=none}
+  \tx[\bfseries\color{white}]{223.6}{123.4}{INFORME DEL PROYECTO}
+
+  % ---------- Breve descripción ----------
+  \tx[\bfseries\color{vrazul}]{65.2}{148.8}{BREVE DESCRIPCIÓN DE LA ACTIVIDAD}
+  \raya[vrazul]{65}{288}{149.5}{0.75}
+  \caja{60}{150}{520}{270}{line width=0.75bp}
+  \campoCaja[multiline=true]{descripcion}{64}{154}{516}{266}
+
+  % ---------- Datos del proyecto ----------
+  \tx[\bfseries\color{vrazul}]{65.2}{302.6}{DATOS DEL PROYECTO}
+  \raya[vrazul]{65}{199}{303.5}{0.75}
+  \caja{60}{304}{520}{693}{line width=0.75bp}
+
+  \etiquetaRaya{73.4}{317.1}{Consejos de Estudiantes:}{519}{consejo}
+  \etiquetaRaya{73.4}{329.7}{Título del Proyecto:}{519}{titulo}
+  \etiquetaRaya{73.4}{342.4}{Actividades Concretas:}{517}{actividades1}
+  \sigueRaya{177.5}{516}{355.0}{actividades2}
+  \sigueRaya{177.5}{516}{367.8}{actividades3}
+  \sigueRaya{177.5}{516}{380.4}{actividades4}
+  \etiquetaRaya{73.4}{392.9}{Competencias:}{518}{competencias1}
+  \sigueRaya{164}{519}{405.7}{competencias2}
+  \etiquetaRaya{73.4}{418.3}{Cronograma:}{516}{cronograma1}
+  \sigueRaya{132}{519}{431.0}{cronograma2}
+  \sigueRaya{132}{519}{443.6}{cronograma3}
+  \etiquetaRaya{73.4}{456.2}{Alcance, destinatarios y previsión de asistentes:}{515}{alcance1}
+  \sigueRaya{288}{516}{468.9}{alcance2}
+  \sigueRaya{288}{516}{481.5}{alcance3}
+  \etiquetaRaya{73.4}{494.2}{Número de componentes del equipo:}{516}{componentes}
+  \etiquetaRaya{73.4}{506.8}{Lugar y necesidades técnicas:}{518}{lugar1}
+  \sigueRaya{206}{516}{519.4}{lugar2}
+  \sigueRaya{206}{516}{532.1}{lugar3}
+
+  \etiquetaRaya{73.4}{544.8}{Importe por conceptos:}{416}{concepto1}   \importe{importe1}{544.8}
+  \sigueRaya{178.8}{416}{559.5}{concepto2}                                \importe{importe2}{559.5}
+  \sigueRaya{178.8}{416}{574.1}{concepto3}                                \importe{importe3}{574.1}
+  \sigueRaya{178.8}{416}{588.9}{concepto4}                                \importe{importe4}{588.9}
+  \sigueRaya{178.8}{416}{603.5}{concepto5}                                \importe{importe5}{603.5}
+  \tx[\bfseries]{314.9}{618.0}{Total ayuda solicitada}
+  \tx{418.8}{618.0}{:}
+  \importe[\sumaDe{"importe1","importe2","importe3","importe4","importe5"}]{total}{618.0}
+
+  \etiquetaRaya{73.4}{630.6}{Otras fuentes de financiación:}{519}{otras1}
+  \sigueRaya{206}{516}{643.2}{otras2}
+  \sigueRaya{206}{516}{655.9}{otras3}
+  \sigueRaya{206}{516}{668.5}{otras4}
+
+  \tx{65.2}{719.2}{Presidente del Consejo de Estudiantes}
+  \tx{306.6}{719.2}{VºBº Responsable de Estudiantes del Centro}
+\end{tikzpicture}
+\end{Form}
+\end{document}

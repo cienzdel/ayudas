@@ -1,0 +1,105 @@
+% anexos.sty: base común de las réplicas rellenables de los Anexos 1, 2 y 4 de la
+% convocatoria de ayudas a Consejos de Estudiantes de Centro (Vicerrectorado de
+% Estudiantes y Empleo, Universidad de Zaragoza).
+%
+% Todo se coloca en coordenadas absolutas medidas sobre los PDF oficiales:
+% x e y en puntos PostScript (bp), con el origen ARRIBA a la izquierda, igual
+% que en pymupdf. «y» es siempre la línea base del texto.
+%
+% Si antes de cargar el paquete se define \CONCALCULO, los importes llevan
+% JavaScript de formato y suma (versión «rellenable con sumas» para Acrobat).
+% Esa versión NO debe firmarse: el JavaScript rompe AutoFirma. Para firmar se
+% usa el formulario web, que rellena la versión sin JS y la aplana.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{anexos}[2026/11/05 Anexos rellenables]
+
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{newtxtext}                 % Times
+\RequirePackage[scaled=0.92]{helvet}       % Arial
+\RequirePackage[a4paper,margin=0pt]{geometry}
+\RequirePackage{xcolor}
+\RequirePackage{graphicx}
+\RequirePackage{tikz}
+\RequirePackage{calc}
+\RequirePackage[hidelinks]{hyperref}
+\hypersetup{pdfstartview={}, pdfpagemode=UseNone, pdfcreator={LaTeX},
+  pdfproducer={}, pdfsubject={Versión rellenable no oficial}}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+\definecolor{vrazul}{rgb}{0,0,0.5}
+\definecolor{vrgris}{rgb}{0.5,0.5,0.5}
+\definecolor{vramarillo}{rgb}{1,1,0.6}
+\definecolor{vrcaja}{rgb}{0.76,0.76,0.76}
+
+\newcommand\arial{\fontfamily{phv}\selectfont}
+\newcommand\arialnarrow{\fontfamily{phv}\fontseries{mc}\selectfont}
+
+% ---------- colocación absoluta ----------
+% \en{x}{y}{contenido}: línea base izquierda del contenido en (x, y).
+\newcommand\en[3]{\node[anchor=base west,inner sep=0pt,outer sep=0pt,
+  xshift=#1,yshift=-#2] at (current page.north west) {#3};}
+\newlength\anchoAux
+\newlength\xAux
+
+% Texto: \tx[formato]{x}{y}{texto}  (x, y en bp, sin unidad)
+\newcommand\tx[4][]{\en{#2bp}{#3bp}{#1#4}}
+
+% Raya horizontal de x0 a x1 (bp) a la altura y (borde superior de la raya).
+\newcommand\raya[5][black]{% [color]{x0}{x1}{y}{grosor}
+  \en{#2bp}{\dimexpr #4bp+#5bp\relax}{\color{#1}\rule{\dimexpr #3bp-#2bp\relax}{#5bp}}}
+
+% Rectángulo: \caja{x0}{y0}{x1}{y1}{opciones tikz}
+\newcommand\caja[5]{\draw[#5] ([xshift=#1bp,yshift=-#2bp]current page.north west)
+  rectangle ([xshift=#3bp,yshift=-#4bp]current page.north west);}
+
+% ---------- campos ----------
+% \TF{opciones}: \TextField con las opciones ya expandidas (keyval no expande macros).
+\newcommand\TF[1]{\begingroup\edef\x{\endgroup\noexpand\TextField[#1]}\x{}}
+\newcommand\estiloCampo{bordercolor={},backgroundcolor={},borderwidth=0,charsize=10pt}
+% \campo[opciones]{nombre}{x0}{x1}{yRaya}: campo de una línea sobre una raya.
+\newcommand\campo[5][]{\en{\dimexpr #3bp+1bp\relax}{\dimexpr #5bp-0.6bp\relax}{%
+  \TF{name=#2,width=\dimexpr #4bp-#3bp-2bp\relax,height=12bp,\estiloCampo,#1}}}
+% \campoCaja[opciones]{nombre}{x0}{y0}{x1}{y1}: campo que ocupa un rectángulo.
+\newcommand\campoCaja[6][]{\en{#3bp}{#6bp}{%
+  \TF{name=#2,width=\dimexpr #5bp-#3bp\relax,height=\dimexpr #6bp-#4bp\relax,
+  \estiloCampo,#1}}}
+
+% Importes: alineados a la derecha; con \CONCALCULO, formato 1.234,56.
+\newcommand\fmtImporte{}
+\newcommand\sumaDe[1]{}
+\ifdefined\CONCALCULO
+  \renewcommand\fmtImporte{align=2,
+    format={AFNumber_Format(2,2,0,0,"",true);},
+    keystroke={AFNumber_Keystroke(2,2,0,0,"",true);}}
+  % \sumaDe{"a","b","c"}
+  \renewcommand\sumaDe[1]{,calculate={AFSimple_Calculate("SUM", new Array(#1));}}
+\else
+  \renewcommand\fmtImporte{align=2}
+\fi
+
+% Raya con etiqueta delante: \etiquetaRaya[opciones campo]{x}{y}{etiqueta}{x1}{campo}
+% La raya (y el campo) empiezan donde acaba la etiqueta.
+% (Fuera de los nodos TikZ usa \nullfont: la anchura se mide dentro del nodo.)
+\newcommand\etiquetaRaya[6][]{%
+  \etiquetaCampo[#1]{#2}{#3}{#4}{#5}{#6}%
+  \en{\xAux}{\dimexpr #3bp+1.5bp\relax}{\rule{\dimexpr #5bp-\xAux\relax}{0.5bp}}}
+% Igual, pero sin raya: \etiquetaCampo[opciones campo]{x}{y}{etiqueta}{x1}{campo}
+\newcommand\etiquetaCampo[6][]{%
+  \en{#2bp}{#3bp}{\sbox0{#4}\global\anchoAux=\wd0 \usebox0}%
+  \setlength\xAux{\dimexpr #2bp+\anchoAux+2bp\relax}%
+  \en{\dimexpr\xAux+1bp\relax}{\dimexpr #3bp+0.9bp\relax}{%
+    \TF{name=#6,width=\dimexpr #5bp-\xAux-2bp\relax,height=12bp,\estiloCampo,#1}}}
+% Raya de continuación con campo: \sigueRaya{x0}{x1}{y}{campo}
+\newcommand\sigueRaya[4]{%
+  \en{#1bp}{\dimexpr #3bp+1.5bp\relax}{\rule{\dimexpr #2bp-#1bp\relax}{0.5bp}}%
+  \en{\dimexpr #1bp+1bp\relax}{\dimexpr #3bp+0.9bp\relax}{%
+    \TF{name=#4,width=\dimexpr #2bp-#1bp-2bp\relax,height=12bp,\estiloCampo}}}
+
+% Aviso de versión no oficial (pie, gris, muy pequeño).
+\newcommand\avisoNoOficial[1][829]{\tx[\arial\fontsize{5.5}{6}\selectfont\color{vrgris}]{65}{#1}{%
+  Versión rellenable no oficial, maquetada por el Consejo de Estudiantes de Ciencias
+  a partir del modelo de la convocatoria 2025/26. Comprobad que coincide con el modelo vigente.}}
+
+\endinput

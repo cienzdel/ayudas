@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anexos de las ayudas del Vicerrectorado · Consejo de Estudiantes de Ciencias</title>
+<meta name="description" content="Rellena en el navegador los Anexos 1, 2 y 4 de las ayudas a Consejos de Estudiantes de Centro y descarga el PDF listo para firmar.">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<header class="cabecera">
+  <div class="envoltorio">
+    <p class="miga"><a href="https://cienzdel.unizar.es/ayudas-vicerrectorado">← Guía de las ayudas en cienzdel.unizar.es</a></p>
+    <h1>Anexos de las ayudas del Vicerrectorado</h1>
+    <p class="entradilla">Rellena los datos una vez y descarga los Anexos 1, 2 y 4 en PDF, con las sumas hechas y listos para firmar con AutoFirma.
+      Todo se procesa en tu navegador: no se envía ni se guarda nada en ningún servidor.</p>
+  </div>
+</header>
+
+<main class="envoltorio">
+  <section class="barra" aria-label="Acciones">
+    <button type="button" id="cargar-ejemplo" class="secundario">Cargar el ejemplo (Lucía Ejemplo)</button>
+    <button type="button" id="guardar-json" class="secundario">Guardar los datos en un archivo</button>
+    <label class="boton secundario" for="abrir-json">Abrir un archivo de datos</label>
+    <input type="file" id="abrir-json" accept="application/json,.json" hidden>
+    <button type="button" id="vaciar" class="secundario peligro">Vaciar</button>
+  </section>
+
+  <form id="formulario" autocomplete="off" novalidate>
+    <fieldset>
+      <legend>1. Persona responsable</legend>
+      <p class="ayuda">Quien firma la solicitud y recibe el pago: normalmente la Presidencia del Consejo. Las facturas tienen que ir a su nombre (nunca a nombre de la Universidad).</p>
+      <div class="rejilla">
+        <label>Nombre y apellidos <input name="persona.nombre"></label>
+        <label>DNI <input name="persona.dni" class="corto"></label>
+        <label class="ancho">Cargo <input name="persona.cargo" placeholder="Presidente/a del Consejo de Estudiantes de la Facultad de Ciencias"></label>
+        <label>Teléfono <input name="persona.telefono" inputmode="tel"></label>
+        <label>Correo electrónico <input name="persona.email" type="email"></label>
+        <label class="ancho">Domicilio <input name="persona.domicilio"></label>
+        <label>Ciudad <input name="persona.ciudad"></label>
+        <label>Código postal <input name="persona.cp" class="corto" inputmode="numeric"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>2. Consejo y cuenta bancaria</legend>
+      <div class="rejilla">
+        <label class="ancho">Consejo de Estudiantes <input name="consejo.nombre" value="Consejo de Estudiantes de la Facultad de Ciencias"></label>
+        <label>Centro <input name="consejo.centro" value="Facultad de Ciencias"></label>
+        <label>NIF de la entidad (Anexo 4, si lo hay) <input name="consejo.nif" class="corto"></label>
+        <label>Titular de la cuenta <input name="banco.titular"></label>
+        <label>NIF del titular <input name="banco.nif" class="corto"></label>
+        <label class="ancho">IBAN <input name="banco.iban" placeholder="ES00 0000 0000 0000 0000 0000" spellcheck="false">
+          <span class="estado" id="estado-iban" aria-live="polite"></span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>3. Solicitud: Anexos 1 y 2</legend>
+      <p class="ayuda">Se presenta antes de la actividad, con el Vº Bº del Vicedecanato en el Anexo 2 y las facturas proforma.</p>
+      <div class="rejilla">
+        <label class="ancho">Título del proyecto <input name="solicitud.titulo"></label>
+        <label class="ancho">Motivos <input name="solicitud.motivos"></label>
+        <label>Asistentes <input name="solicitud.asistentes" placeholder="2 estudiantes de grado"></label>
+        <label>Lugar <input name="solicitud.lugar"></label>
+        <label>Fecha(s) de la actividad <input name="solicitud.fechas" placeholder="Del 10 al 13 de marzo de 2027"></label>
+        <label>Fecha de la solicitud <input name="solicitud.fechaSolicitud" type="date"></label>
+        <label class="ancho">Otras ayudas solicitadas <textarea name="solicitud.otrasAyudas" rows="2"></textarea></label>
+        <label class="ancho">Breve descripción de la actividad <textarea name="solicitud.descripcion" rows="5"></textarea></label>
+        <label class="ancho">Actividades concretas <textarea name="solicitud.actividades" rows="3"></textarea></label>
+        <label class="ancho">Competencias <textarea name="solicitud.competencias" rows="2"></textarea></label>
+        <label class="ancho">Cronograma <textarea name="solicitud.cronograma" rows="2"></textarea></label>
+        <label class="ancho">Alcance, destinatarios y previsión de asistentes <textarea name="solicitud.alcance" rows="2"></textarea></label>
+        <label>Número de componentes del equipo <input name="solicitud.componentes" class="corto"></label>
+        <label class="ancho">Lugar y necesidades técnicas <textarea name="solicitud.necesidades" rows="2"></textarea></label>
+        <label class="ancho">Otras fuentes de financiación <textarea name="solicitud.otrasFuentes" rows="2"></textarea></label>
+      </div>
+      <h3>Importe por conceptos <span class="nota">(máximo 5 líneas en el Anexo 2)</span></h3>
+      <div class="tabla-envoltorio">
+        <table class="tabla" id="tabla-conceptos">
+          <thead><tr><th>Concepto</th><th class="num">Importe (€)</th><th><span class="sr">Quitar</span></th></tr></thead>
+          <tbody></tbody>
+          <tfoot><tr><th class="der">Total ayuda solicitada</th><td class="num" id="total-conceptos">0,00</td><td></td></tr></tfoot>
+        </table>
+      </div>
+      <button type="button" class="anadir" data-tabla="conceptos">+ Añadir concepto</button>
+      <div class="descargas">
+        <button type="button" data-anexo="1">Descargar Anexo 1 (PDF)</button>
+        <button type="button" data-anexo="2">Descargar Anexo 2 (PDF)</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>4. Justificación: Anexo 4</legend>
+      <p class="ayuda">Tras la concesión, con las facturas definitivas. En «Importe subvencionado» va solo lo que paga el Vicerrectorado: si el Vicedecanato cubre un tercio,
+        repartid las facturas para que cada parte cuadre con la <a href="reparto/">herramienta de reparto de gastos</a>.</p>
+      <div class="rejilla">
+        <label class="ancho">En concepto de <input name="justificacion.concepto"></label>
+        <label class="ancho">Organizado por <input name="justificacion.organizador"></label>
+        <label>Fecha de firma <input name="justificacion.fechaFirma" type="date"></label>
+      </div>
+      <h3>Facturas <span class="nota">(máximo 12 filas en el Anexo 4)</span></h3>
+      <div class="tabla-envoltorio">
+        <table class="tabla" id="tabla-facturas">
+          <thead><tr><th>Proveedor</th><th>Nº factura</th><th>Fecha</th><th>Concepto</th><th class="num">Importe factura</th><th class="num">Subvencionado</th><th><span class="sr">Quitar</span></th></tr></thead>
+          <tbody></tbody>
+          <tfoot><tr><th colspan="4" class="der">Totales</th><td class="num" id="total-facturas">0,00</td><td class="num" id="total-subvencion">0,00</td><td></td></tr></tfoot>
+        </table>
+      </div>
+      <button type="button" class="anadir" data-tabla="facturas">+ Añadir factura</button>
+      <div class="descargas">
+        <button type="button" data-anexo="4">Descargar Anexo 4 (PDF)</button>
+      </div>
+    </fieldset>
+  </form>
+
+  <div id="avisos" class="avisos" role="status" aria-live="polite" hidden></div>
+
+  <section class="otros">
+    <h2>Otros archivos</h2>
+    <ul>
+      <li><a href="pdf/anexo1.pdf">Anexo 1</a>, <a href="pdf/anexo2.pdf">Anexo 2</a> y <a href="pdf/anexo4.pdf">Anexo 4</a> rellenables en blanco (sin cálculos).</li>
+      <li><a href="pdf/anexo2_sumas.pdf">Anexo 2</a> y <a href="pdf/anexo4_sumas.pdf">Anexo 4</a> con sumas automáticas para Acrobat.
+        <strong>No firméis estos dos</strong>: llevan JavaScript, que hace fallar a AutoFirma. Para firmar, usad este formulario o «Imprimir → Guardar como PDF».</li>
+      <li>Expediente de ejemplo con datos ficticios: <a href="ejemplo/anexo1_ejemplo.pdf">Anexo 1</a>, <a href="ejemplo/anexo2_ejemplo.pdf">Anexo 2</a>, <a href="ejemplo/anexo4_ejemplo.pdf">Anexo 4</a>.</li>
+      <li>Fuentes LaTeX de los Anexos: <a href="https://github.com/cienzdel/ayudas">github.com/cienzdel/ayudas</a>.</li>
+    </ul>
+    <p class="nota">Son réplicas no oficiales del modelo de la convocatoria 2025/26. Antes de presentar nada, comprobad que el modelo de la convocatoria vigente no ha cambiado.</p>
+  </section>
+</main>
+
+<footer class="pie"><div class="envoltorio">Consejo de Estudiantes de la Facultad de Ciencias · Universidad de Zaragoza · <a href="https://cienzdel.unizar.es">cienzdel.unizar.es</a></div></footer>
+
+<script src="vendor/pdf-lib.min.js"></script>
+<script src="rellenar.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

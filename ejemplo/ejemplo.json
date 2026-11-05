@@ -1,0 +1,55 @@
+{
+  "persona": {
+    "nombre": "Lucía Ejemplo Ejemplo",
+    "dni": "00000000T",
+    "cargo": "Presidenta del Consejo de Estudiantes de la Facultad de Ciencias",
+    "telefono": "600 000 000",
+    "email": "000000@unizar.es",
+    "domicilio": "C/ Pedro Cerbuna, 12",
+    "ciudad": "Zaragoza",
+    "cp": "50009"
+  },
+  "consejo": {
+    "nombre": "Consejo de Estudiantes de la Facultad de Ciencias",
+    "centro": "Facultad de Ciencias",
+    "nif": ""
+  },
+  "banco": {
+    "titular": "Lucía Ejemplo Ejemplo",
+    "nif": "00000000T",
+    "iban": "ES00 0000 0000 0000 0000 0000"
+  },
+  "solicitud": {
+    "titulo": "Asistencia al Encuentro Nacional de Estudiantes de Ejemplo 2027",
+    "motivos": "Representar a los estudiantes de la Facultad en el encuentro nacional del sector",
+    "asistentes": "2 estudiantes de grado de la Facultad de Ciencias",
+    "lugar": "Ciudad de Ejemplo",
+    "fechas": "Del 10 al 13 de marzo de 2027",
+    "otrasAyudas": "Se solicita al Vicedecanato de Estudiantes la financiación de un tercio del gasto total.",
+    "fechaSolicitud": "2027-01-15",
+    "descripcion": "Dos representantes del Consejo de Estudiantes asisten al Encuentro Nacional de Estudiantes de Ejemplo, donde se reúnen las delegaciones de estudiantes de todas las universidades españolas del sector para debatir sobre los planes de estudio, las prácticas externas y la representación estudiantil, y para preparar posicionamientos conjuntos.\nA la vuelta, se presentarán las conclusiones al Pleno del Consejo y se publicarán en la web y en Instagram.",
+    "actividades": "Asistencia a las sesiones plenarias y a los grupos de trabajo; votación de los posicionamientos; reunión con las delegaciones de otras universidades; presentación de las conclusiones al Pleno del Consejo.",
+    "competencias": "Representación estudiantil, trabajo en equipo, negociación y comunicación en público.",
+    "cronograma": "10/03: llegada y acreditación. 11-12/03: plenarios y grupos de trabajo. 13/03: votaciones y regreso. Abril: presentación de conclusiones al Pleno.",
+    "alcance": "Los estudiantes de grado de la Facultad (unos 2.000), a los que llegan las conclusiones a través del Pleno, la web y las redes.",
+    "componentes": "2",
+    "necesidades": "Ninguna: las instalaciones las pone la universidad organizadora.",
+    "otrasFuentes": "Vicedecanato de Estudiantes de la Facultad de Ciencias (un tercio del gasto).",
+    "conceptos": [
+      { "concepto": "Inscripción (2 personas)", "importe": "230,00" },
+      { "concepto": "Transporte de ida y vuelta (2 personas)", "importe": "160,00" },
+      { "concepto": "Alojamiento (2 personas, 3 noches)", "importe": "210,00" }
+    ]
+  },
+  "justificacion": {
+    "concepto": "Asistencia al Encuentro Nacional de Estudiantes de Ejemplo (10-13/03/2027)",
+    "organizador": "Asociación Nacional de Estudiantes de Ejemplo",
+    "fechaFirma": "2027-03-25",
+    "facturas": [
+      { "proveedor": "Asoc. Ejemplo", "numero": "F2027-001", "fecha": "15/03/27", "concepto": "Inscripción Lucía Ejemplo", "importe": "115,00", "subvencion": "115,00" },
+      { "proveedor": "Asoc. Ejemplo", "numero": "F2027-002", "fecha": "15/03/27", "concepto": "Inscripción Pablo Ejemplo", "importe": "115,00", "subvencion": "115,00" },
+      { "proveedor": "Renfe", "numero": "000000000001", "fecha": "01/03/27", "concepto": "Tren ida (2 personas)", "importe": "78,40", "subvencion": "78,40" },
+      { "proveedor": "Alsa", "numero": "000-0-000-01", "fecha": "01/03/27", "concepto": "Autobús vuelta (2 personas)", "importe": "70,76", "subvencion": "70,76" }
+    ]
+  }
+}

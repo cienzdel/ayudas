@@ -1,0 +1,72 @@
+:root {
+  --azul: #1b2a5c;
+  --azul-claro: #e9edf7;
+  --texto: #1d2230;
+  --suave: #5b6274;
+  --borde: #cfd5e2;
+  --fondo: #f6f7fb;
+  --tarjeta: #ffffff;
+  --rojo: #b3261e;
+  --verde: #1e7a46;
+  --aviso: #fff6dc;
+  --aviso-borde: #e6c35c;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --azul: #9fb4ff; --azul-claro: #222a44; --texto: #e6e8ef; --suave: #a8afc2;
+    --borde: #3a4160; --fondo: #12151f; --tarjeta: #1a1e2b; --rojo: #ff8a80; --verde: #6fd59b;
+    --aviso: #3a321a; --aviso-borde: #8a7330;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--texto); background: var(--fondo); }
+a { color: var(--azul); }
+.envoltorio { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+.cabecera { background: #1b2a5c; color: #fff; padding: 20px 0 24px; }
+.cabecera a { color: #dfe6ff; }
+.cabecera h1 { margin: 4px 0 8px; font-size: clamp(1.5rem, 4vw, 2rem); line-height: 1.2; }
+.miga { margin: 0; font-size: .9rem; }
+.entradilla { margin: 0; max-width: 60ch; color: #e8ecf8; }
+
+.barra { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
+button, .boton { font: inherit; font-size: .95rem; border: 1px solid var(--azul); background: var(--azul); color: #fff; padding: 8px 14px; border-radius: 6px; cursor: pointer; display: inline-block; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) button:not(.secundario):not(.anadir):not(.quitar) { color: #12151f; } }
+button.secundario, .boton.secundario { background: transparent; color: var(--azul); }
+button.peligro { border-color: var(--rojo); color: var(--rojo); }
+button:focus-visible, .boton:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid color-mix(in srgb, var(--azul) 45%, transparent); outline-offset: 2px; }
+
+fieldset { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 10px; margin: 0 0 20px; padding: 16px 18px 20px; min-width: 0; }
+legend { font-weight: 700; font-size: 1.1rem; padding: 0 6px; color: var(--azul); }
+h3 { font-size: 1rem; margin: 20px 0 8px; }
+.ayuda { margin: 0 0 12px; color: var(--suave); font-size: .93rem; }
+.nota { color: var(--suave); font-weight: 400; font-size: .88rem; }
+.rejilla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+.rejilla .ancho { grid-column: 1 / -1; }
+@media (max-width: 640px) { .rejilla { grid-template-columns: 1fr; } }
+label { display: flex; flex-direction: column; gap: 4px; font-size: .9rem; font-weight: 600; }
+input, textarea { font: inherit; font-weight: 400; font-size: .95rem; color: var(--texto); background: var(--fondo); border: 1px solid var(--borde); border-radius: 6px; padding: 7px 9px; width: 100%; }
+textarea { resize: vertical; }
+.estado { font-weight: 500; font-size: .85rem; min-height: 1.2em; }
+.estado.ok { color: var(--verde); } .estado.mal { color: var(--rojo); }
+
+.tabla-envoltorio { overflow-x: auto; position: relative; }
+.tabla { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.tabla th, .tabla td { border-bottom: 1px solid var(--borde); padding: 4px; text-align: left; vertical-align: middle; }
+.tabla thead th { font-size: .82rem; color: var(--suave); font-weight: 600; }
+.tabla input { padding: 5px 7px; min-width: 70px; }
+.tabla .num, .tabla .num input { text-align: right; }
+.tabla .der { text-align: right; }
+.tabla tfoot td, .tabla tfoot th { font-weight: 700; border-bottom: 0; }
+#tabla-facturas input[data-c="proveedor"], #tabla-facturas input[data-c="numero"], #tabla-facturas input[data-c="fecha"] { min-width: 90px; }
+#tabla-facturas input[data-c="concepto"] { min-width: 160px; }
+button.quitar { background: transparent; border: 0; color: var(--suave); padding: 4px 8px; font-size: 1.1rem; }
+button.anadir { margin-top: 8px; background: transparent; color: var(--azul); border-style: dashed; }
+.descargas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--borde); }
+
+.avisos { position: sticky; bottom: 12px; background: var(--aviso); border: 1px solid var(--aviso-borde); border-radius: 8px; padding: 10px 14px; margin: 0 0 20px; }
+.avisos ul { margin: 4px 0 0; padding-left: 20px; }
+.otros { margin: 8px 0 32px; }
+.otros h2 { font-size: 1.1rem; }
+.pie { border-top: 1px solid var(--borde); padding: 16px 0; color: var(--suave); font-size: .88rem; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
