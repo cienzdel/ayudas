@@ -23,7 +23,9 @@ La guía paso a paso del trámite está en https://cienzdel.unizar.es/ayudas-vic
   `\filasTabla` de `latex/anexo4.tex`) que fluyen como una longtable: la tabla sigue en la página siguiente con
   los títulos repetidos y cada bloque de abajo salta entero de página si no cabe.
 - `index.html`, `app.js`, `estilo.css`: el formulario.
-- `reparto/`: herramienta para repartir las facturas entre Vicerrectorado (2/3) y Vicedecanato (1/3).
+- `reparto/`: solo redirige a la herramienta de reparto de gastos, que vive en
+  [cienzdel/reparto-gastos-ciencias](https://github.com/cienzdel/reparto-gastos-ciencias)
+  (fork de snatip/reparto-gastos-ciencias).
 - `ejemplo/`: datos ficticios (`ejemplo.json`, «Lucía Ejemplo», DNI 00000000T, IBAN de ceros)
   y los tres anexos rellenos con ellos.
 - `vendor/pdf-lib.min.js`: pdf-lib 1.17.1 (licencia MIT, en `vendor/pdf-lib-LICENSE.md`).
