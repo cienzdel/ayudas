@@ -122,8 +122,9 @@
         if (!/^ES\d{22}$/.test(iban)) avisos.push('El IBAN debe ser español: ES y 22 dígitos.');
         else if (!ibanValido(iban)) avisos.push('El IBAN no supera el dígito de control: revisadlo.');
         const dig = iban.slice(2);
-        campos.ibandc1 = dig[0]; campos.ibandc2 = dig[1];
-        for (let k = 0; k < 20; k++) campos['iban' + (k + 1)] = dig[2 + k] || '';
+        // Campos «peine» (una cifra por casilla): ibandc (2 cifras) e iban1..iban5 (4 cada uno).
+        campos.ibandc = dig.slice(0, 2);
+        for (let g = 0; g < 5; g++) campos['iban' + (g + 1)] = dig.slice(2 + 4 * g, 6 + 4 * g);
       }
     }
     return { campos, grupos, avisos };

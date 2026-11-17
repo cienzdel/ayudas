@@ -19,6 +19,21 @@
 % Lista "subvencion1",...,"subvencion12" para la suma.
 \def\listaSubvencion{"subvencion1","subvencion2","subvencion3","subvencion4","subvencion5","subvencion6","subvencion7","subvencion8","subvencion9","subvencion10","subvencion11","subvencion12"}
 
+% Bloques del IBAN: \ibanOpc{n.º de casillas}{campo siguiente o vacío}. Campo «peine»: el
+% visor reparte las cifras, una por casilla, y no deja escribir más de n. Con \CONCALCULO,
+% además, solo acepta cifras y al llenarse salta al campo siguiente (sin «&», que es de TeX).
+\ifdefined\CONCALCULO
+  \newcommand\ibanOpc[2]{comb,maxlen=#1,charsize=10pt,
+    keystroke={if(!event.willCommit){var c=event.change;for(var i=0;i<c.length;i++){if(c.charAt(i)<"0"||c.charAt(i)>"9")event.rc=false;}if(event.rc){if(AFMergeChange(event).length==#1){\if\relax\detokenize\expandafter{#2}\relax\else this.getField("#2").setFocus();\fi}}}}}
+  % Importes en euros: se escribe el número y el visor añade « €» (U+20AC, escrito desde JavaScript).
+  \newcommand\fmtEuros{align=2,
+    format={AFNumber_Format(2,2,0,0,String.fromCharCode(32,8364),false);},
+    keystroke={AFNumber_Keystroke(2,2,0,0,String.fromCharCode(32,8364),false);}}
+\else
+  \newcommand\ibanOpc[2]{comb,maxlen=#1,charsize=10pt}
+  \newcommand\fmtEuros{align=2}
+\fi
+
 % Cada pieza es un tikzpicture propio; con \PIEZAS, además, va en su propia página.
 \newcommand\pieza{\ifdefined\PIEZAS\clearpage\fi\par\noindent}
 \newenvironment{capa}{\begin{tikzpicture}[remember picture,overlay,every node/.style={font=\fontsize{12}{14}\selectfont}]}{\end{tikzpicture}}
@@ -31,6 +46,13 @@
 % ---------- logo (0-62) ----------
 \pieza\begin{capa}
   \en{31.5bp}{59.2bp}{\includegraphics[width=156.4bp]{logo_vr.png}}
+  \ifdefined\CONCALCULO
+  % Botón de imprimir: se ve en pantalla pero no se imprime (print=false), así que no sale
+  % al «imprimir a PDF» para aplanar el impreso antes de firmarlo.
+  \en{444.4bp}{50bp}{\PushButton[name=imprimir,onclick={this.print();},print=false,
+    width=78bp,height=18bp,charsize=10pt,bordercolor={0.5 0.5 0.5},backgroundcolor={0.92 0.92 0.92},
+    altname={Imprimir el impreso (este botón no sale en papel ni en el PDF impreso)}]{Imprimir}}
+  \fi
 \end{capa}
 % ---------- cabecera y datos del perceptor (62-338.4) ----------
 \pieza\begin{capa}
@@ -54,7 +76,7 @@
   \etiquetaRaya{344}{230.4}{\textbf{Código Postal:}}{523}{cp}
   \etiquetaRaya{79.4}{252.2}{\textbf{Teléfono de contacto}:}{303}{telefono}
   \etiquetaRaya{306.2}{252.2}{\textbf{Email:}}{523}{email}
-  \etiquetaRaya[\fmtImporte\sumaDe{"total"}]{79.4}{274.1}{\textbf{Recibirá mediante transferencia, de la Universidad de Zaragoza, la cantidad de}:}{528}{cantidad}
+  \etiquetaRaya[\fmtEuros\sumaDe{"total"},calculatesortkey=2]{79.4}{274.1}{\textbf{Recibirá mediante transferencia, de la Universidad de Zaragoza, la cantidad de}:}{528}{cantidad}
   \etiquetaRaya{79.4}{289.9}{\textbf{En concepto de:}}{523}{concepto}
   \etiquetaRaya{79.4}{305.8}{\textbf{Organizado por:}}{523}{organizador}
   \tx{79.4}{321.6}{\textbf{Según las facturas adjuntas}:}
@@ -83,15 +105,15 @@
     \celda[align=1]{numero\i}{186}{235.5}{\ya}{\yb}
     \celda[align=1]{fecha\i}{235.5}{285}{\ya}{\yb}
     \celda{conceptofra\i}{285}{384}{\ya}{\yb}
-    \celda[\fmtImporte]{importe\i}{384}{441}{\ya}{\yb}
-    \celda[\fmtImporte]{subvencion\i}{441}{533}{\ya}{\yb}
+    \celda[\fmtEuros]{importe\i}{384}{441}{\ya}{\yb}
+    \celda[\fmtEuros]{subvencion\i}{441}{533}{\ya}{\yb}
   \end{capa}
   % total (505.8-520.1)
   \pieza\begin{capa}
   \lineaH{72.5}{533}{505.8}\lineaH{72.5}{533}{520.1}
   \lineaV{72.5}{505.8}{520.1}\lineaV{441}{505.8}{520.1}\lineaV{533}{505.8}{520.1}
   \tx[\bfseries]{320.2}{517.3}{TOTAL A PAGAR . . .}
-  \celda[\fmtImporte\sumaDe{\listaSubvencion},charsize=10pt]{total}{441}{533}{505.8}{520.1}
+  \celda[\fmtEuros\sumaDe{\listaSubvencion},calculatesortkey=1,charsize=10pt]{total}{441}{533}{505.8}{520.1}
   \end{capa}
 \else
   \pieza\begin{capa}
@@ -117,11 +139,11 @@
     \celda[align=1]{numero\i}{186}{235.5}{\ya}{\yb}
     \celda[align=1]{fecha\i}{235.5}{285}{\ya}{\yb}
     \celda{conceptofra\i}{285}{384}{\ya}{\yb}
-    \celda[\fmtImporte]{importe\i}{384}{441}{\ya}{\yb}
-    \celda[\fmtImporte]{subvencion\i}{441}{533}{\ya}{\yb}
+    \celda[\fmtEuros]{importe\i}{384}{441}{\ya}{\yb}
+    \celda[\fmtEuros]{subvencion\i}{441}{533}{\ya}{\yb}
   }
   \tx[\bfseries]{320.2}{517.3}{TOTAL A PAGAR . . .}
-  \celda[\fmtImporte\sumaDe{\listaSubvencion},charsize=10pt]{total}{441}{533}{505.8}{520.1}
+  \celda[\fmtEuros\sumaDe{\listaSubvencion},calculatesortkey=1,charsize=10pt]{total}{441}{533}{505.8}{520.1}
   \end{capa}
 \fi
 % ---------- datos bancarios (520.1-612) ----------
@@ -134,16 +156,20 @@
   \foreach \a/\b in {127.4/145.7,145.7/163.2,163.2/176,176/188.9}
     {\draw[line width=0.5bp] ([xshift=\a bp,yshift=-592.4bp]current page.north west) rectangle ([xshift=\b bp,yshift=-606.8bp]current page.north west);}
   \tx{133.1}{603.5}{E}\tx{151.5}{603.5}{S}
-  \campoCaja[charsize=10pt,align=1]{ibandc1}{163.7}{593}{175.5}{606.3}
-  \campoCaja[charsize=10pt,align=1]{ibandc2}{176.5}{593}{188.4}{606.3}
-  \foreach \g in {0,...,4} {
+  % Un campo «peine» (comb) por bloque: una cifra por casilla. ibandc = 2 dígitos de control;
+  % iban1..iban5 = los 5 grupos de 4. Con \CONCALCULO, solo admiten cifras y saltan solos al
+  % bloque siguiente al llenarse.
+  \campoCaja[\ibanOpc{2}{iban1}]{ibandc}{163.2}{593}{188.9}{606.3}
+  \foreach \g [evaluate=\g as \sig using int(\g+2)] in {0,...,4} {
+    \pgfmathsetmacro\xg{201.7+64.1*\g}
     \foreach \j in {0,...,3} {
-      \pgfmathsetmacro\xa{201.7+64.1*\g+12.85*\j}
+      \pgfmathsetmacro\xa{\xg+12.85*\j}
       \pgfmathsetmacro\xb{\xa+12.85}
-      \pgfmathtruncatemacro\k{4*\g+\j+1}
       \draw[line width=0.5bp] ([xshift=\xa bp,yshift=-592.4bp]current page.north west) rectangle ([xshift=\xb bp,yshift=-606.8bp]current page.north west);
-      \campoCaja[charsize=10pt,align=1]{iban\k}{\fpeval{\xa+0.5}}{593}{\fpeval{\xb-0.5}}{606.3}
     }
+    \pgfmathtruncatemacro\k{\g+1}
+    \ifnum\sig<6 \edef\sigCampo{iban\sig}\else\def\sigCampo{}\fi
+    \campoCaja[\ibanOpc{4}{\sigCampo}]{iban\k}{\xg}{593}{\fpeval{\xg+51.4}}{606.3}
   }
 \end{capa}
 % ---------- fecha y firmas (612-757) ----------

@@ -73,8 +73,9 @@
   \renewcommand\fmtImporte{align=2,
     format={AFNumber_Format(2,2,0,0,"",true);},
     keystroke={AFNumber_Keystroke(2,2,0,0,"",true);}}
-  % \sumaDe{"a","b","c"}
-  \renewcommand\sumaDe[1]{,calculate={AFSimple_Calculate("SUM", new Array(#1));}}
+  % \sumaDe{"a","b","c"}. Campo de solo lectura: el resultado se ve como texto que se
+  % actualiza solo, y nadie puede escribir encima. (Sin \CONCALCULO se rellena a mano.)
+  \renewcommand\sumaDe[1]{,readonly,calculate={AFSimple_Calculate("SUM", new Array(#1));}}
 \else
   \renewcommand\fmtImporte{align=2}
 \fi

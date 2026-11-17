@@ -17,7 +17,13 @@ La guía paso a paso del trámite está en https://cienzdel.unizar.es/ayudas-vic
     coordenadas de siempre. Es la plantilla del Anexo 4 en la web.
   - `anexo2_sumas.tex`, `anexo4_sumas.tex`: el mismo anexo con `\CONCALCULO`, que añade
     JavaScript de Acrobat para formatear importes y sumar el total. **No se deben firmar**:
-    el JavaScript hace fallar a AutoFirma.
+    el JavaScript hace fallar a AutoFirma. En ellos los totales son de solo lectura (se
+    actualizan solos) y en el Anexo 4 los importes se escriben como número y salen con « €».
+    El Anexo 4 con sumas lleva además un botón
+    «Imprimir» que no sale impreso (`print=false`): se rellena, se imprime a PDF y ese PDF
+    (ya aplanado, sin JavaScript) es el que se firma.
+  - El IBAN del Anexo 4 son campos «peine» (`comb`): `ibandc` (2 cifras) e `iban1`…`iban5`
+    (4 cada uno), una cifra por casilla.
 - `pdf/`: los PDF compilados (copiar aquí tras compilar).
 - `rellenar.js`: rellena una plantilla con pdf-lib, reparte los textos largos por las líneas,
   encoge la letra si no cabe, aplana y quita `/AcroForm`, `/OpenAction` y `/AA`.
